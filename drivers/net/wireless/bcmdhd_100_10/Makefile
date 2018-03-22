@@ -290,12 +290,6 @@ DHDCFLAGS += -DSET_SSID_FAIL_CUSTOM_RC=100
 # Disable the legacy randmac and enable scanmac
 #DHDCFLAGS += -DLEGACY_RANDOM_MAC
 
-# Android Version Check from Platform source
-ifneq ($(PLATFORM_VERSION),)
-MAJOR_VERSION := $(shell echo $(PLATFORM_VERSION) | cut -d "." -f 1)
-DHDCFLAGS += -DANDROID_PLATFORM_VERSION=$(MAJOR_VERSION)
-endif
-
 ##############################
 # Android Platform Definition
 ##############################
