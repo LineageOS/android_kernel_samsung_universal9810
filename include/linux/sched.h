@@ -389,6 +389,8 @@ extern void scheduler_tick(void);
 extern int sched_cpu_starting(unsigned int cpu);
 extern int sched_cpu_activate(unsigned int cpu);
 extern int sched_cpu_deactivate(unsigned int cpu);
+extern void cpuset_cpu_active(void);
+extern int cpuset_cpu_inactive(unsigned int cpu);
 
 #ifdef CONFIG_HOTPLUG_CPU
 extern int sched_cpu_dying(unsigned int cpu);
@@ -1114,6 +1116,30 @@ struct sched_group_energy {
 	struct capacity_state *cap_states; /* ptr to capacity state array */
 };
 
+struct energy_env {
+	struct sched_group	*sg_top;
+	struct sched_group	*sg_cap;
+	int			cap_idx;
+	int			util_delta;
+	int			src_cpu;
+	int			dst_cpu;
+	int			energy;
+	int			payoff;
+	struct task_struct	*task;
+	struct {
+		int before;
+		int after;
+		int delta;
+		int diff;
+	} nrg;
+	struct {
+		int before;
+		int after;
+		int delta;
+	} cap;
+};
+
+
 unsigned long capacity_curr_of(int cpu);
 
 struct sched_group;
@@ -1384,6 +1410,24 @@ struct sched_avg {
 	unsigned long load_avg, util_avg;
 };
 
+#ifdef CONFIG_SCHED_EHMP
+#define NOT_ONTIME		1
+#define ONTIME_MIGRATING	2
+#define ONTIME			4
+
+struct ontime_avg {
+	u64 ontime_migration_time;
+	u64 load_sum;
+	unsigned long load_avg;
+};
+
+struct ontime_entity {
+	struct ontime_avg avg;
+	int flags;
+	int cpu;
+};
+#endif
+
 #ifdef CONFIG_SCHEDSTATS
 struct sched_statistics {
 	u64			wait_start;
@@ -1519,6 +1563,9 @@ struct sched_entity {
 	 */
 	struct sched_avg	avg ____cacheline_aligned_in_smp;
 #endif
+#ifdef CONFIG_SCHED_EHMP
+	struct ontime_entity	ontime;
+#endif
 };
 
 struct sched_rt_entity {
@@ -1536,6 +1583,15 @@ struct sched_rt_entity {
 	struct rt_rq		*rt_rq;
 	/* rq "owned" by this entity/group: */
 	struct rt_rq		*my_q;
+#endif
+#ifdef CONFIG_SMP
+	/*
+	 * Per entity load average tracking.
+	 *
+	 * Put into separate cache line so it does not
+	 * collide with read-mostly values above.
+	 */
+	struct sched_avg	avg ____cacheline_aligned_in_smp;
 #endif
 };
 
@@ -1654,6 +1710,9 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
+#ifdef CONFIG_SCHED_USE_FLUID_RT
+	int victim_flag;
+#endif
 #ifdef CONFIG_SCHED_WALT
 	struct ravg ravg;
 	/*
@@ -3768,8 +3827,6 @@ static inline unsigned long rlimit_max(unsigned int limit)
 #define SCHED_CPUFREQ_RT	(1U << 0)
 #define SCHED_CPUFREQ_DL	(1U << 1)
 #define SCHED_CPUFREQ_IOWAIT	(1U << 2)
-
-#define SCHED_CPUFREQ_RT_DL	(SCHED_CPUFREQ_RT | SCHED_CPUFREQ_DL)
 
 #ifdef CONFIG_CPU_FREQ
 struct update_util_data {

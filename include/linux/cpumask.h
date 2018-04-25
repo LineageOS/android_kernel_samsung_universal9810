@@ -293,6 +293,11 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 	set_bit(cpumask_check(cpu), cpumask_bits(dstp));
 }
 
+static inline void __cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
+{
+       __set_bit(cpumask_check(cpu), cpumask_bits(dstp));
+}
+
 /**
  * cpumask_clear_cpu - clear a cpu in a cpumask
  * @cpu: cpu number (< nr_cpu_ids)
@@ -301,6 +306,11 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 {
 	clear_bit(cpumask_check(cpu), cpumask_bits(dstp));
+}
+
+static inline void __cpumask_clear_cpu(int cpu, struct cpumask *dstp)
+{
+       __clear_bit(cpumask_check(cpu), cpumask_bits(dstp));
 }
 
 /**
@@ -680,6 +690,11 @@ void alloc_bootmem_cpumask_var(cpumask_var_t *mask);
 void free_cpumask_var(cpumask_var_t mask);
 void free_bootmem_cpumask_var(cpumask_var_t mask);
 
+static inline bool cpumask_available(cpumask_var_t mask)
+{
+	return mask != NULL;
+}
+
 #else
 typedef struct cpumask cpumask_var_t[1];
 
@@ -719,6 +734,11 @@ static inline void free_cpumask_var(cpumask_var_t mask)
 
 static inline void free_bootmem_cpumask_var(cpumask_var_t mask)
 {
+}
+
+static inline bool cpumask_available(cpumask_var_t mask)
+{
+	return true;
 }
 #endif /* CONFIG_CPUMASK_OFFSTACK */
 

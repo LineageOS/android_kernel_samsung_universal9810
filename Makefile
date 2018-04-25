@@ -829,6 +829,14 @@ ifeq ($(CONFIG_STRIP_ASM_SYMS),y)
 LDFLAGS_vmlinux	+= $(call ld-option, -X,)
 endif
 
+ifneq ($(SEC_BUILD_CONF_USE_FINGERPRINT_TZ), false)
+  ifeq ($(CONFIG_SENSORS_FINGERPRINT), y)
+    ifneq ($(CONFIG_SEC_FACTORY), y)
+      export KBUILD_FP_SENSOR_CFLAGS := -DENABLE_SENSORS_FPRINT_SECURE
+    endif
+  endif
+endif
+
 # Default kernel image to build when no specific target is given.
 # KBUILD_IMAGE may be overruled on the command line or
 # set in the environment

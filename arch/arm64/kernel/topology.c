@@ -317,6 +317,16 @@ static void update_siblings_masks(unsigned int cpuid)
 	}
 }
 
+int get_current_cpunum(void)
+{
+       unsigned int mpidr, lvl;
+
+       mpidr = read_cpuid_mpidr();
+       lvl = (mpidr & MPIDR_MT_BITMASK) ? 1 : 0;
+       return ((MPIDR_AFFINITY_LEVEL(mpidr, (1 + lvl)) << 2)
+		       | MPIDR_AFFINITY_LEVEL(mpidr, lvl));
+}
+
 void store_cpu_topology(unsigned int cpuid)
 {
 	struct cpu_topology *cpuid_topo = &cpu_topology[cpuid];

@@ -25,7 +25,7 @@ config ARM64
 	select ARM_GIC
 	select AUDIT_ARCH_COMPAT_GENERIC
 	select ARM_GIC_V2M if PCI
-	select ARM_GIC_V3
+	select ARM_GIC_V3 if !ARCH_EXYNOS
 	select ARM_GIC_V3_ITS if PCI
 	select ARM_PSCI_FW
 	select BUILDTIME_EXTABLE_SORT
@@ -83,7 +83,7 @@ config ARM64
 	select HAVE_FUNCTION_GRAPH_TRACER
 	select HAVE_GCC_PLUGINS
 	select HAVE_GENERIC_DMA_COHERENT
-	select HAVE_HW_BREAKPOINT if PERF_EVENTS
+#	select HAVE_HW_BREAKPOINT if PERF_EVENTS
 	select HAVE_IRQ_TIME_ACCOUNTING
 	select HAVE_MEMBLOCK
 	select HAVE_MEMBLOCK_NODE_MAP if NUMA
@@ -109,6 +109,7 @@ config ARM64
 	select POWER_SUPPLY
 	select SPARSE_IRQ
 	select SYSCTL_EXCEPTION_TRACE
+	select SECCOMP
 	help
 	  ARM 64-bit (AArch64) Linux support.
 
@@ -426,6 +427,10 @@ config ARM64_ERRATUM_843419
 	  to use an incorrect address on Cortex-A53 parts up to r0p4.
 
 	  If unsure, say Y.
+
+config ARM64_ERRATUM_814818
+	bool "Ananke : Allocating streaming write might deadlock"
+	default y
 
 config CAVIUM_ERRATUM_22375
 	bool "Cavium erratum 22375, 24313"
@@ -900,6 +905,13 @@ config ARM64_MODULE_PLTS
 	bool
 	select ARM64_MODULE_CMODEL_LARGE
 	select HAVE_MOD_ARCH_SPECIFIC
+
+config RELOCATABLE_KERNEL
+	bool "set kernel to relocatable in both virtual and physical address"
+	default n
+	help
+	  This configuare will allow you to config the kernel into position
+	  independent kernel, with '--PIE' insert into LD script.
 
 config RELOCATABLE
 	bool

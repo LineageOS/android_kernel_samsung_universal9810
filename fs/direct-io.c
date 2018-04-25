@@ -401,6 +401,7 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
 {
 	struct bio *bio = sdio->bio;
 	unsigned long flags;
+	struct inode *inode;
 
 	bio->bi_private = dio;
 
@@ -412,6 +413,7 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
 		bio_set_pages_dirty(bio);
 
 	dio->bio_bdev = bio->bi_bdev;
+	inode = dio->inode;
 
 	if (sdio->submit_io) {
 		sdio->submit_io(bio, dio->inode, sdio->logical_offset_in_bio);

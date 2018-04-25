@@ -187,3 +187,6 @@ obj-$(CONFIG_IP_SET) += ipset/
 
 # IPVS
 obj-$(CONFIG_IP_VS) += ipvs/
+
+# netfilter prio
+obj-y += xt_PRIO.o
