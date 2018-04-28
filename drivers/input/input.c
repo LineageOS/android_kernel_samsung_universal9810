@@ -29,6 +29,8 @@
 #include <linux/rcupdate.h>
 #include "input-compat.h"
 
+#define CONFIG_INPUT_BOOSTER
+
 #if !defined(CONFIG_INPUT_BOOSTER) // Input Booster +
 #include <linux/input/input.h>
 #endif // Input Booster -
