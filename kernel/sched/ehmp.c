@@ -17,14 +17,6 @@
 #include "sched.h"
 #include "tune.h"
 
-unsigned long task_util(struct task_struct *p)
-{
-	if (rt_task(p))
-		return p->rt.avg.util_avg;
-	else
-		return p->se.avg.util_avg;
-}
-
 static inline struct task_struct *task_of(struct sched_entity *se)
 {
 	return container_of(se, struct task_struct, se);
@@ -600,26 +592,13 @@ static void mark_shallowest_cpu(int cpu, unsigned int *min_exit_latency,
 
 	cpumask_set_cpu(cpu, shallowest_cpus);
 }
-static int check_migration_task(struct task_struct *p)
-{
-	if (rt_task(p))
-		return !p->rt.avg.last_update_time;
-	else
-		return !p->se.avg.last_update_time;
-}
 
-unsigned long cpu_util_wake(int cpu, struct task_struct *p)
+inline unsigned long rt_cpu_util_wake(int cpu, struct task_struct *p)
 {
-	unsigned long util, capacity;
-
-	/* Task has no contribution or is new */
-	if (cpu != task_cpu(p) || check_migration_task(p))
+	if (rt_task(p) && !p->rt.avg.last_update_time)
 		return cpu_util(cpu);
-
-	capacity = capacity_orig_of(cpu);
-	util = max_t(long, cpu_util(cpu) - task_util(p), 0);
-
-	return (util >= capacity) ? capacity : util;
+	else
+		return cpu_util_wake(cpu, p);
 }
 
 static int find_group_boost_target(struct task_struct *p)
@@ -646,7 +625,7 @@ static int find_group_boost_target(struct task_struct *p)
 	}
 
 	for_each_cpu_and(cpu, tsk_cpus_allowed(p), sched_group_cpus(sd->groups)) {
-		unsigned long util = cpu_util_wake(cpu, p);
+		unsigned long util = rt_cpu_util_wake(cpu, p);
 
 		if (idle_cpu(cpu)) {
 			struct cpuidle_state *idle;
@@ -727,7 +706,7 @@ find_boost_target(struct sched_domain *sd, struct task_struct *p,
 			if (!cpu_online(i))
 				continue;
 
-			wake_util = cpu_util_wake(i, p);
+			wake_util = rt_cpu_util_wake(i, p);
 			new_util = wake_util + task_util(p);
 			new_util = max(min_util, new_util);
 
@@ -826,7 +805,7 @@ static int find_prefer_idle_target(struct sched_domain *sd,
 			if (!cpu_online(i))
 				continue;
 
-			wake_util = cpu_util_wake(i, p);
+			wake_util = rt_cpu_util_wake(i, p);
 			new_util = wake_util + task_util(p);
 			new_util = max(min_util, new_util);
 
@@ -1584,7 +1563,7 @@ static inline int find_best_target(struct sched_domain *sd, struct task_struct *
 			 * so prev_cpu will receive a negative bias due to the double
 			 * accounting. However, the blocked utilization may be zero.
 			 */
-			wake_util = cpu_util_wake(i, p);
+			wake_util = rt_cpu_util_wake(i, p);
 			new_util = wake_util + task_util(p);
 
 			/*
@@ -1748,7 +1727,7 @@ int exynos_select_cpu_rt(struct sched_domain *sd, struct task_struct *p, bool bo
 			if (!cpu_online(i))
 				continue;
 
-			wake_util = cpu_util_wake(i, p);
+			wake_util = rt_cpu_util_wake(i, p);
 			new_util = wake_util + task_util(p);
 			new_util = max(min_util, new_util);
 

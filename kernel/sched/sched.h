@@ -2170,3 +2170,6 @@ static inline void cpufreq_update_this_cpu(struct rq *rq, unsigned int flags) {}
 #else /* arch_scale_freq_capacity */
 #define arch_scale_freq_invariant()	(false)
 #endif
+
+unsigned long task_util(struct task_struct *p);
+int cpu_util_wake(int cpu, struct task_struct *p);

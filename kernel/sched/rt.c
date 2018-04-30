@@ -2303,8 +2303,7 @@ static inline int weight_from_rtprio(int prio)
 }
 
 extern int exynos_select_cpu_rt(struct sched_domain *sd, struct task_struct *p, bool boost);
-extern unsigned long cpu_util_wake(int cpu, struct task_struct *p);
-extern unsigned long task_util(struct task_struct *p);
+extern unsigned long rt_cpu_util_wake(int cpu, struct task_struct *p);
 
 unsigned int frt_boost_threshold;
 
@@ -2416,10 +2415,10 @@ static int find_lowest_rq_fluid(struct task_struct *task)
 	do {
 		for_each_cpu_and(i, sched_group_cpus(sg), lowest_mask) {
 
-			cpu_load = cpu_util_wake(i, task) + task_util(task);
+			cpu_load = rt_cpu_util_wake(i, task) + task_util(task);
 
 			if (rt_task(cpu_rq(i)->curr)) {
-				rt_cpu_load = cpu_util_wake(i, task) + task_util(task);
+				rt_cpu_load = rt_cpu_util_wake(i, task) + task_util(task);
 
 				if (rt_cpu_load < rt_min_load ||
 					(rt_cpu_load == rt_min_load && i == prev_cpu)) {
