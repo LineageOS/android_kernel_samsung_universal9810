@@ -22,7 +22,7 @@
 
 #include <linux/kthread.h>
 
-#define MAX_INTENSITY			800
+#define MAX_INTENSITY			10000
 #define PACKET_MAX_SIZE		1000
 #define MULTI_FREQ_DIVIDER		78125000 /* 1s/128(pdiv)=7812500 */
 
