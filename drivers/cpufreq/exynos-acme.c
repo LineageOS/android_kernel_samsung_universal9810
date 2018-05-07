@@ -821,11 +821,9 @@ static inline void control_hmp_boost(bool enable)
 {
 	if (ehmp_boost && !enable) {
 		request_kernel_prefer_perf(STUNE_TOPAPP, 0);
-		request_kernel_prefer_perf(STUNE_FOREGROUND, 0);
 		ehmp_boost = false;
 	} else if (!ehmp_boost && enable) {
 		request_kernel_prefer_perf(STUNE_TOPAPP, 1);
-		request_kernel_prefer_perf(STUNE_FOREGROUND, 1);
 		ehmp_boost = true;
 	}
 }
