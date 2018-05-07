@@ -73,6 +73,8 @@ ifndef KBUILD_VERBOSE
   KBUILD_VERBOSE = 0
 endif
 
+KBUILD_VERBOSE = 1
+
 ifeq ($(KBUILD_VERBOSE),1)
   quiet =
   Q =
