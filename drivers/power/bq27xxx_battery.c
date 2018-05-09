@@ -773,7 +773,7 @@ static void bq27xxx_battery_poll(struct work_struct *work)
 	if (poll_interval > 0) {
 		/* The timer does not have to be accurate. */
 		set_timer_slack(&di->work.timer, poll_interval * HZ / 4);
-		schedule_delayed_work(&di->work, poll_interval * HZ);
+		queue_delayed_work(system_power_efficient_wq, &di->work, poll_interval * HZ);
 	}
 }
 
@@ -988,7 +988,7 @@ static void bq27xxx_external_power_changed(struct power_supply *psy)
 	struct bq27xxx_device_info *di = power_supply_get_drvdata(psy);
 
 	cancel_delayed_work_sync(&di->work);
-	schedule_delayed_work(&di->work, 0);
+	queue_delayed_work(system_power_efficient_wq, &di->work, 0);
 }
 
 static int bq27xxx_powersupply_init(struct bq27xxx_device_info *di,
@@ -1134,7 +1134,7 @@ static int bq27xxx_battery_i2c_probe(struct i2c_client *client,
 		goto batt_failed;
 
 	/* Schedule a polling after about 1 min */
-	schedule_delayed_work(&di->work, 60 * HZ);
+	queue_delayed_work(system_power_efficient_wq, &di->work, 60 * HZ);
 
 	i2c_set_clientdata(client, di);
 

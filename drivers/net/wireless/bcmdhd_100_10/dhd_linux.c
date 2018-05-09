@@ -5600,7 +5600,7 @@ dhd_event_logtrace_process(struct work_struct * work)
 
 	/* Reschedule the workqueue if more packets to be processed */
 	if (qlen >= DHD_EVENT_LOGTRACE_BOUND) {
-		schedule_delayed_work(&dhd->event_log_dispatcher_work,
+		queue_delayed_work(system_power_efficient_wq, &dhd->event_log_dispatcher_work,
 			msecs_to_jiffies(DHD_EVENT_LOGTRACE_RESCHEDULE_DELAY_MS));
 	}
 }
@@ -5616,7 +5616,7 @@ dhd_event_logtrace_enqueue(dhd_pub_t *dhdp, int ifidx, void *pktbuf)
 #endif /* PCIE_FULL_DONGLE */
 	skb_queue_tail(&dhd->evt_trace_queue, pktbuf);
 
-	schedule_delayed_work(&dhd->event_log_dispatcher_work, 0);
+	queue_delayed_work(system_power_efficient_wq, &dhd->event_log_dispatcher_work, 0);
 }
 
 void

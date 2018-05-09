@@ -1255,7 +1255,7 @@ static void bq24190_charger_work(struct work_struct *work)
 
 	if (bdi->attach) {
 		dev_info(bdi->dev, "power supply attached\n");
-		schedule_delayed_work(&bdi->charger_work, HZ * 60);
+		queue_delayed_work(system_power_efficient_wq, &bdi->charger_work, HZ * 60);
 	}
 }
 #endif
@@ -1290,7 +1290,7 @@ static void sec_bat_get_battery_info(
 	bdi->soc_cnt++;
 	bdi->capacity[bdi->soc_cnt % 3] = value.intval;
 
-	schedule_delayed_work(&bdi->polling_work, HZ * 20);
+	queue_delayed_work(system_power_efficient_wq, &bdi->polling_work, HZ * 20);
 }
 #endif
 
@@ -1747,7 +1747,7 @@ static int bq24190_handle_notification(struct notifier_block *nb,
 		}
 	}
 
-	schedule_delayed_work(&bdi->charger_work, HZ * 1);
+	queue_delayed_work(system_power_efficient_wq, &bdi->charger_work, HZ * 1);
 	return 0;
 }
 #endif
@@ -1845,7 +1845,7 @@ static int bq24190_probe(struct i2c_client *client,
 #if defined(CONFIG_FUELGAUGE_MAX17058_POWER) || defined(CONFIG_FUELGAUGE_S2MG001_POWER)
 	INIT_DELAYED_WORK(&bdi->polling_work,
 				sec_bat_get_battery_info);
-	schedule_delayed_work(&bdi->polling_work, HZ * 5);
+	queue_delayed_work(system_power_efficient_wq, &bdi->polling_work, HZ * 5);
 #endif
 
 	ret = bq24190_sysfs_create_group(bdi);

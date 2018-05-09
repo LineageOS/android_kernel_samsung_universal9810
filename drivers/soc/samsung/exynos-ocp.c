@@ -342,7 +342,7 @@ static void exynos_ocp_work(struct work_struct *work)
 	control_ocp_interrupt(SWI_ENABLE);
 
 	cancel_delayed_work_sync(&data->delayed_work);
-	schedule_delayed_work(&data->delayed_work, msecs_to_jiffies(data->release_duration));
+	queue_delayed_work(system_power_efficient_wq, &data->delayed_work, msecs_to_jiffies(data->release_duration));
 }
 
 static void exynos_ocp_work_release(struct work_struct *work)
@@ -356,7 +356,7 @@ static void exynos_ocp_work_release(struct work_struct *work)
 		set_ocp_max_limit(0);
 	}
 	else
-		schedule_delayed_work(&data->delayed_work, msecs_to_jiffies(data->release_duration));
+		queue_delayed_work(system_power_efficient_wq, &data->delayed_work, msecs_to_jiffies(data->release_duration));
 }
 
 static irqreturn_t exynos_ocp_irq_handler(int irq, void *id)

@@ -1608,7 +1608,7 @@ static int tsu6721_muic_probe(struct i2c_client *i2c,
 
 	/* initial cable detection */
 	INIT_DELAYED_WORK(&muic_data->init_work, tsu6721_muic_init_detect);
-	schedule_delayed_work(&muic_data->init_work, msecs_to_jiffies(3000));
+	queue_delayed_work(system_power_efficient_wq, &muic_data->init_work, msecs_to_jiffies(3000));
 
 	return 0;
 

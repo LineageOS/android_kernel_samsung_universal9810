@@ -442,7 +442,7 @@ static void max77705_pd_check_pdmsg(struct max77705_usbc_platform_data *usbc_dat
 		break;
 	case Source_PD_SenderResponseTimer_Timeout:
 		max77705_vbus_turn_on_ctrl(usbc_data, OFF, false);
-		schedule_delayed_work(&usbc_data->vbus_hard_reset_work, msecs_to_jiffies(800));
+		queue_delayed_work(system_power_efficient_wq, &usbc_data->vbus_hard_reset_work, msecs_to_jiffies(800));
 		break;
 	case PD_DR_Swap_Request_Received:
 		msg_maxim("%s DR_SWAP received.", __func__);
@@ -486,7 +486,7 @@ static void max77705_pd_check_pdmsg(struct max77705_usbc_platform_data *usbc_dat
 		/*turn off the vbus both Source and Sink*/
 		if (usbc_data->cc_data->current_pr == SRC) {
 			max77705_vbus_turn_on_ctrl(usbc_data, OFF, false);
-			schedule_delayed_work(&usbc_data->vbus_hard_reset_work, msecs_to_jiffies(760));
+			queue_delayed_work(system_power_efficient_wq, &usbc_data->vbus_hard_reset_work, msecs_to_jiffies(760));
 		}
 		break;
 	case Get_Vbus_turn_on:

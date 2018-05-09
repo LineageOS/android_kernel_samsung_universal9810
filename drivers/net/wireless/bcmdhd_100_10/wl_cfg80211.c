@@ -1227,7 +1227,7 @@ static void wl_add_remove_pm_enable_work(struct bcm_cfg80211 *cfg,
 
 	/* It should schedule work item only if driver is up */
 	if (wq_duration && dhd->up) {
-		if (schedule_delayed_work(&cfg->pm_enable_work,
+		if (queue_delayed_work(system_power_efficient_wq, &cfg->pm_enable_work,
 				msecs_to_jiffies((const unsigned int)wq_duration))) {
 			DHD_PM_WAKE_LOCK_TIMEOUT(cfg->pub, wq_duration);
 		} else {
@@ -14578,7 +14578,7 @@ wl_bss_connect_done(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 			dhd_irq_set_affinity(dhdp);
 			delta_time = IRQ_SET_DURATION - local_clock() / USEC_PER_SEC;
 			if (delta_time > 0) {
-				schedule_delayed_work(&cfg->irq_set_work,
+				queue_delayed_work(system_power_efficient_wq, &cfg->irq_set_work,
 					msecs_to_jiffies((const unsigned int)delta_time));
 			}
 #endif /* WL_IRQSET */
