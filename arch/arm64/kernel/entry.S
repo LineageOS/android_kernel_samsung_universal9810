@@ -456,12 +456,25 @@ el1_sync:
 	mrs     x0, esr_el1
 	mov     x1, #0x30
 	movk    x1, #0x9600, lsl #0x10
-        cmp     x0, x1
-        b.eq    96f
+	cmp     x0, x1
+	b.eq    96f
+	movk    x1, #0x9400, lsl #0x10
+	cmp     x0, x1
+	b.eq    96f
 	movk    x1, #0x8600, lsl #0x10
-        cmp     x0, x1
-        b.eq    86f
-	b	skip
+	cmp     x0, x1
+	b.eq    86f
+	movk    x1, #0x8400, lsl #0x10
+	cmp     x0, x1
+	b.eq    86f
+	mov     x1, #0x70
+	movk    x1, #0x9600, lsl #0x10
+	cmp     x0, x1
+	b.eq    96f
+	movk    x1, #0x9400, lsl #0x10
+	cmp     x0, x1
+	b.eq    96f
+	b       skip
 96:
 86:
 /* recovery tlb confilict */

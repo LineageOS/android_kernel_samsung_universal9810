@@ -69,7 +69,6 @@ static void srpmb_worker(struct work_struct *data)
 	struct rpmb_packet packet;
 	struct rpmb_irq_ctx *rpmb_ctx;
 	struct scsi_device *sdp;
-	struct device *dev;
 	Rpmb_Req *req;
 
 	if (!data) {
@@ -223,7 +222,7 @@ static void srpmb_worker(struct work_struct *data)
 		dev_err(&sr_pdev->dev, "invalid requset type : %x\n", req->type);
 	}
 
-	dev_info(dev, "finish rpmb workqueue with command(%d)\n", req->type);
+	dev_info(&sr_pdev->dev, "finish rpmb workqueue with command(%d)\n", req->type);
 	__pm_relax(&rpmb_ctx->wakesrc);
 }
 
