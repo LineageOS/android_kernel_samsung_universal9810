@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 4.9.103 Kernel Configuration
+# Linux/arm64 4.9.107 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -287,7 +287,6 @@ CONFIG_BLOCK=y
 # CONFIG_BLK_DEV_BSGLIB is not set
 # CONFIG_BLK_DEV_INTEGRITY is not set
 # CONFIG_BLK_CMDLINE_PARSER is not set
-# CONFIG_JOURNAL_DATA_TAG is not set
 
 #
 # Partition Types

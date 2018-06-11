@@ -1115,25 +1115,6 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
 		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
-
-#ifdef CONFIG_JOURNAL_DATA_TAG
-		if (blk_queue_journal_tag(rq->q) &&
-				(rq->cmd_flags & REQ_META) &&
-				(rq_data_dir(rq) == WRITE)) {
-#ifdef CONFIG_JOURNAL_DATA_TAG_DEBUG
-			static unsigned long log_time;
-			static unsigned long tag_count;
-
-			tag_count++;
-			if (printk_timed_ratelimit(&log_time, 5000)) {
-				pr_info("set ufs data tag for %lu meta flagged writes.\n",
-						tag_count);
-				tag_count = 0;
-			}
-#endif
-			SCpnt->cmnd[6] |= (1 << 4);
-		}
-#endif
 	} else {
 		if (unlikely(rq->cmd_flags & REQ_FUA)) {
 			/*
@@ -3678,4 +3659,3 @@ static void sd_print_result(const struct scsi_disk *sdkp, const char *msg,
 			  "%s: Result: hostbyte=0x%02x driverbyte=0x%02x\n",
 			  msg, host_byte(result), driver_byte(result));
 }
-

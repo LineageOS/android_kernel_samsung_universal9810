@@ -847,13 +847,6 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
 	if (!allow_merge_bio_for_encryption(rq->bio, bio))
 		return false;
 
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	/* journal tagged bio can only be merged to REQ_META request */
-	if (((bio_flagged(bio, BIO_JOURNAL)) && !(rq->cmd_flags & REQ_META))
-	    || (!(bio_flagged(bio, BIO_JOURNAL)) && (rq->cmd_flags & REQ_META)))
-		return false;
-#endif
-
 	return true;
 }
 

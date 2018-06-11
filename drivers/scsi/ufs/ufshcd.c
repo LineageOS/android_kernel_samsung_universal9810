@@ -121,20 +121,6 @@
 
 static int ufs_shutdown_state = 0;
 
-static u32 ufs_query_desc_max_size[] = {
-	QUERY_DESC_DEVICE_MAX_SIZE,
-	QUERY_DESC_CONFIGURAION_MAX_SIZE,
-	QUERY_DESC_UNIT_MAX_SIZE,
-	QUERY_DESC_RFU_MAX_SIZE,
-	QUERY_DESC_INTERCONNECT_MAX_SIZE,
-	QUERY_DESC_STRING_MAX_SIZE,
-	QUERY_DESC_RFU_MAX_SIZE,
-	QUERY_DESC_GEOMETRY_MAX_SIZE,
-	QUERY_DESC_POWER_MAX_SIZE,
-	QUERY_DESC_HEALTH_MAX_SIZE,
-	QUERY_DESC_RFU_MAX_SIZE,
-};
-
 static struct ufs_dev_fix ufs_fixups[] = {
         /* UFS cards deviations table */
         UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
@@ -275,8 +261,8 @@ static int ufshcd_send_request_sense(struct ufs_hba *hba,
                                struct scsi_device *sdp);
 
 #if defined(SEC_UFS_ERROR_COUNT)
-#include <scsi/scsi_proto.h> 
-#define MAX_U8_VALUE	0xff 
+#include <scsi/scsi_proto.h>
+#define MAX_U8_VALUE	0xff
 
 static void SEC_ufs_operation_check(struct ufs_hba *hba, u32 command)
 {
@@ -317,17 +303,17 @@ static void SEC_ufs_uic_error_check(struct ufs_hba *hba, bool cmd_count, bool fa
 
 		switch (uic_cmd->command & COMMAND_OPCODE_MASK) {
 		case UIC_CMD_DME_GET:
-			if (uic_cmd_cnt->DME_GET_err < MAX_U8_VALUE) 
-				uic_cmd_cnt->DME_GET_err++; 
+			if (uic_cmd_cnt->DME_GET_err < MAX_U8_VALUE)
+				uic_cmd_cnt->DME_GET_err++;
 			uic_cmd_cnt->UIC_cmd_err++;
 			break;
 		case UIC_CMD_DME_SET:
-			if (uic_cmd_cnt->DME_SET_err < MAX_U8_VALUE) 
+			if (uic_cmd_cnt->DME_SET_err < MAX_U8_VALUE)
 				uic_cmd_cnt->DME_SET_err++;
 			uic_cmd_cnt->UIC_cmd_err++;
 			break;
 		case UIC_CMD_DME_PEER_GET:
-			if (uic_cmd_cnt->DME_PEER_GET_err < MAX_U8_VALUE) 
+			if (uic_cmd_cnt->DME_PEER_GET_err < MAX_U8_VALUE)
 				uic_cmd_cnt->DME_PEER_GET_err++;
 			uic_cmd_cnt->UIC_cmd_err++;
 			break;
@@ -393,27 +379,27 @@ static void SEC_ufs_uic_error_check(struct ufs_hba *hba, bool cmd_count, bool fa
 			uic_err_cnt->UIC_err++;
 		}
 		if (uic_error & UFSHCD_UIC_DL_NAC_RECEIVED_ERROR) {
-			if (uic_err_cnt->DL_NAC_RECEIVED_ERROR_cnt < MAX_U8_VALUE) 
-				uic_err_cnt->DL_NAC_RECEIVED_ERROR_cnt++; 
-			uic_err_cnt->UIC_err++; 
-		} 
+			if (uic_err_cnt->DL_NAC_RECEIVED_ERROR_cnt < MAX_U8_VALUE)
+				uic_err_cnt->DL_NAC_RECEIVED_ERROR_cnt++;
+			uic_err_cnt->UIC_err++;
+		}
 		if (uic_error & UFSHCD_UIC_DL_ERROR) {
-			if (uic_err_cnt->DL_TC_REPLAY_ERROR_cnt < MAX_U8_VALUE) 
+			if (uic_err_cnt->DL_TC_REPLAY_ERROR_cnt < MAX_U8_VALUE)
 				uic_err_cnt->DL_TC_REPLAY_ERROR_cnt++;
 			uic_err_cnt->UIC_err++;
 		}
 		if (uic_error & UFSHCD_UIC_NL_ERROR) {
-			if (uic_err_cnt->NL_ERROR_cnt < MAX_U8_VALUE) 
+			if (uic_err_cnt->NL_ERROR_cnt < MAX_U8_VALUE)
 				uic_err_cnt->NL_ERROR_cnt++;
 			uic_err_cnt->UIC_err++;
 		}
 		if (uic_error & UFSHCD_UIC_TL_ERROR) {
-			if (uic_err_cnt->TL_ERROR_cnt < MAX_U8_VALUE) 
+			if (uic_err_cnt->TL_ERROR_cnt < MAX_U8_VALUE)
 				uic_err_cnt->TL_ERROR_cnt++;
 			uic_err_cnt->UIC_err++;
 		}
 		if (uic_error & UFSHCD_UIC_DME_ERROR) {
-			if (uic_err_cnt->DME_ERROR_cnt < MAX_U8_VALUE) 
+			if (uic_err_cnt->DME_ERROR_cnt < MAX_U8_VALUE)
 				uic_err_cnt->DME_ERROR_cnt++;
 			uic_err_cnt->UIC_err++;
 		}
@@ -421,19 +407,19 @@ static void SEC_ufs_uic_error_check(struct ufs_hba *hba, bool cmd_count, bool fa
 		struct SEC_UFS_Fatal_err_count *fatal_err_cnt = &(err_info->Fatal_err_count);
 		// hba->error;  // each bit check and count
 		if (hba->errors & DEVICE_FATAL_ERROR) {
-			if (fatal_err_cnt->DFE < MAX_U8_VALUE) 
+			if (fatal_err_cnt->DFE < MAX_U8_VALUE)
 				fatal_err_cnt->DFE++;
 		}
 		if (hba->errors & CONTROLLER_FATAL_ERROR) {
-			if (fatal_err_cnt->CFE < MAX_U8_VALUE) 
+			if (fatal_err_cnt->CFE < MAX_U8_VALUE)
 				fatal_err_cnt->CFE++;
 		}
 		if (hba->errors & SYSTEM_BUS_FATAL_ERROR) {
-			if (fatal_err_cnt->SBFE < MAX_U8_VALUE) 
+			if (fatal_err_cnt->SBFE < MAX_U8_VALUE)
 				fatal_err_cnt->SBFE++;
 		}
 		if (hba->errors & UIC_LINK_LOST) {
-			if (fatal_err_cnt->LLE < MAX_U8_VALUE) 
+			if (fatal_err_cnt->LLE < MAX_U8_VALUE)
 				fatal_err_cnt->LLE++;
 		}
 		if (hba->errors & INT_FATAL_ERRORS)
@@ -448,11 +434,11 @@ static void SEC_ufs_utp_error_check(struct ufs_hba *hba, struct scsi_cmnd *cmd, 
 
 	if (utmr_request) {
 		if (tm_cmd == UFS_QUERY_TASK) {
-			if (utp_err->UTMR_query_task_count < MAX_U8_VALUE) 
+			if (utp_err->UTMR_query_task_count < MAX_U8_VALUE)
 				utp_err->UTMR_query_task_count++;
 			utp_err->UTP_err++;
 		} else if (tm_cmd == UFS_ABORT_TASK) {
-			if (utp_err->UTMR_abort_task_count < MAX_U8_VALUE) 
+			if (utp_err->UTMR_abort_task_count < MAX_U8_VALUE)
 				utp_err->UTMR_abort_task_count++;
 			utp_err->UTP_err++;
 		}
@@ -461,23 +447,23 @@ static void SEC_ufs_utp_error_check(struct ufs_hba *hba, struct scsi_cmnd *cmd, 
 		int opcode = cmd->cmnd[0];
 
 		if (opcode == WRITE_10) {
-			if (utp_err->UTR_write_err < MAX_U8_VALUE) 
+			if (utp_err->UTR_write_err < MAX_U8_VALUE)
 				utp_err->UTR_write_err++;
 			utp_err->UTP_err++;
 		} else if (opcode == READ_10) {
-			if (utp_err->UTR_read_err < MAX_U8_VALUE) 
+			if (utp_err->UTR_read_err < MAX_U8_VALUE)
 				utp_err->UTR_read_err++;
 			utp_err->UTP_err++;
 		} else if (opcode == SYNCHRONIZE_CACHE) {
-			if (utp_err->UTR_sync_cache_err < MAX_U8_VALUE) 
+			if (utp_err->UTR_sync_cache_err < MAX_U8_VALUE)
 				utp_err->UTR_sync_cache_err++;
 			utp_err->UTP_err++;
 		} else if (opcode == UNMAP) {
-			if (utp_err->UTR_unmap_err < MAX_U8_VALUE) 
+			if (utp_err->UTR_unmap_err < MAX_U8_VALUE)
 				utp_err->UTR_unmap_err++;
 			utp_err->UTP_err++;
 		} else {
-			if (utp_err->UTR_etc_err < MAX_U8_VALUE) 
+			if (utp_err->UTR_etc_err < MAX_U8_VALUE)
 				utp_err->UTR_etc_err++;
 			utp_err->UTP_err++;
 		}
@@ -492,41 +478,41 @@ static void SEC_ufs_query_error_check(struct ufs_hba *hba, enum dev_cmd_type cmd
 	enum query_opcode opcode = request->upiu_req.opcode;
 
 	if (cmd_type == DEV_CMD_TYPE_NOP) {
-		if (query_cnt->NOP_err < MAX_U8_VALUE) 
+		if (query_cnt->NOP_err < MAX_U8_VALUE)
 			query_cnt->NOP_err++;
 		query_cnt->Query_err++;
 	} else {
 		switch (opcode) {
 		case UPIU_QUERY_OPCODE_READ_DESC:
-			if (query_cnt->R_Desc_err < MAX_U8_VALUE) 
+			if (query_cnt->R_Desc_err < MAX_U8_VALUE)
 				query_cnt->R_Desc_err++;
 			break;
 		case UPIU_QUERY_OPCODE_WRITE_DESC:
-			if (query_cnt->W_Desc_err < MAX_U8_VALUE) 
+			if (query_cnt->W_Desc_err < MAX_U8_VALUE)
 				query_cnt->W_Desc_err++;
 			break;
 		case UPIU_QUERY_OPCODE_READ_ATTR:
-			if (query_cnt->R_Attr_err < MAX_U8_VALUE) 
+			if (query_cnt->R_Attr_err < MAX_U8_VALUE)
 				query_cnt->R_Attr_err++;
 			break;
 		case UPIU_QUERY_OPCODE_WRITE_ATTR:
-			if (query_cnt->W_Attr_err < MAX_U8_VALUE) 
+			if (query_cnt->W_Attr_err < MAX_U8_VALUE)
 				query_cnt->W_Attr_err++;
 			break;
 		case UPIU_QUERY_OPCODE_READ_FLAG:
-			if (query_cnt->R_Flag_err < MAX_U8_VALUE) 
+			if (query_cnt->R_Flag_err < MAX_U8_VALUE)
 				query_cnt->R_Flag_err++;
 			break;
 		case UPIU_QUERY_OPCODE_SET_FLAG:
-			if (query_cnt->Set_Flag_err < MAX_U8_VALUE) 
+			if (query_cnt->Set_Flag_err < MAX_U8_VALUE)
 				query_cnt->Set_Flag_err++;
 			break;
 		case UPIU_QUERY_OPCODE_CLEAR_FLAG:
-			if (query_cnt->Clear_Flag_err < MAX_U8_VALUE) 
+			if (query_cnt->Clear_Flag_err < MAX_U8_VALUE)
 				query_cnt->Clear_Flag_err++;
 			break;
 		case UPIU_QUERY_OPCODE_TOGGLE_FLAG:
-			if (query_cnt->Toggle_Flag_err < MAX_U8_VALUE) 
+			if (query_cnt->Toggle_Flag_err < MAX_U8_VALUE)
 				query_cnt->Toggle_Flag_err++;
 			break;
 		default:
@@ -2523,7 +2509,7 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
 		goto out;
 	}
 
-	if (*buf_len <= QUERY_DESC_MIN_SIZE || *buf_len > QUERY_DESC_MAX_SIZE) {
+	if (*buf_len < QUERY_DESC_MIN_SIZE || *buf_len > QUERY_DESC_MAX_SIZE) {
 		dev_err(hba->dev, "%s: descriptor buffer size (%d) is out of range\n",
 				__func__, *buf_len);
 		err = -EINVAL;
@@ -2603,6 +2589,92 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
 EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
 
 /**
+ * ufshcd_read_desc_length - read the specified descriptor length from header
+ * @hba: Pointer to adapter instance
+ * @desc_id: descriptor idn value
+ * @desc_index: descriptor index
+ * @desc_length: pointer to variable to read the length of descriptor
+ *
+ * Return 0 in case of success, non-zero otherwise
+ */
+static int ufshcd_read_desc_length(struct ufs_hba *hba,
+	enum desc_idn desc_id,
+	int desc_index,
+	int *desc_length)
+{
+	int ret;
+	u8 header[QUERY_DESC_HDR_SIZE];
+	int header_len = QUERY_DESC_HDR_SIZE;
+
+	if (desc_id >= QUERY_DESC_IDN_MAX)
+		return -EINVAL;
+
+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
+					desc_id, desc_index, 0, header,
+					&header_len);
+
+	if (ret) {
+		dev_err(hba->dev, "%s: Failed to get descriptor header id %d",
+			__func__, desc_id);
+		return ret;
+	} else if (desc_id != header[QUERY_DESC_DESC_TYPE_OFFSET]) {
+		dev_warn(hba->dev, "%s: descriptor header id %d and desc_id %d mismatch",
+			__func__, header[QUERY_DESC_DESC_TYPE_OFFSET],
+			desc_id);
+		ret = -EINVAL;
+	}
+
+	*desc_length = header[QUERY_DESC_LENGTH_OFFSET];
+	return ret;
+
+}
+
+/**
+ * ufshcd_map_desc_id_to_length - map descriptor IDN to its length
+ * @hba: Pointer to adapter instance
+ * @desc_id: descriptor idn value
+ * @desc_len: mapped desc length (out)
+ *
+ * Return 0 in case of success, non-zero otherwise
+ */
+int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
+	enum desc_idn desc_id, int *desc_len)
+{
+	switch (desc_id) {
+	case QUERY_DESC_IDN_DEVICE:
+		*desc_len = hba->desc_size.dev_desc;
+		break;
+	case QUERY_DESC_IDN_POWER:
+		*desc_len = hba->desc_size.pwr_desc;
+		break;
+	case QUERY_DESC_IDN_GEOMETRY:
+		*desc_len = hba->desc_size.geom_desc;
+		break;
+	case QUERY_DESC_IDN_CONFIGURATION:
+		*desc_len = hba->desc_size.conf_desc;
+		break;
+	case QUERY_DESC_IDN_UNIT:
+		*desc_len = hba->desc_size.unit_desc;
+		break;
+	case QUERY_DESC_IDN_INTERCONNECT:
+		*desc_len = hba->desc_size.interc_desc;
+		break;
+	case QUERY_DESC_IDN_STRING:
+		*desc_len = QUERY_DESC_MAX_SIZE;
+		break;
+	case QUERY_DESC_IDN_RFU_0:
+	case QUERY_DESC_IDN_RFU_1:
+		*desc_len = 0;
+		break;
+	default:
+		*desc_len = 0;
+		return -EINVAL;
+	}
+	return 0;
+}
+EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
+
+/**
  * ufshcd_read_desc_param - read the specified descriptor parameter
  * @hba: Pointer to adapter instance
  * @desc_id: descriptor idn value
@@ -2616,64 +2688,51 @@ EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
 static int ufshcd_read_desc_param(struct ufs_hba *hba,
 				  enum desc_idn desc_id,
 				  int desc_index,
-				  u32 param_offset,
+				  u8 param_offset,
 				  u8 *param_read_buf,
-				  u32 param_size)
+				  u8 param_size)
 {
 	int ret;
 	u8 *desc_buf;
-	u32 buff_len;
+	int buff_len;
 	bool is_kmalloc = true;
 
-	/* safety checks */
-	if (desc_id >= QUERY_DESC_IDN_MAX)
+	/* Safety check */
+	if (desc_id >= QUERY_DESC_IDN_MAX || !param_size)
 		return -EINVAL;
 
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (desc_id == QUERY_DESC_IDN_VENDOR)
-		buff_len = param_size;
-	else
-#endif
-	buff_len = ufs_query_desc_max_size[desc_id];
-	if ((param_offset + param_size) > buff_len)
-		return -EINVAL;
+	/* Get the max length of descriptor from structure filled up at probe
+	 * time.
+	 */
+	ret = ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
 
-	if (!param_offset && (param_size == buff_len)) {
-		/* memory space already available to hold full descriptor */
-		desc_buf = param_read_buf;
-		is_kmalloc = false;
-	} else {
-		/* allocate memory to hold full descriptor */
+	/* Sanity checks */
+	if (ret || !buff_len) {
+		dev_err(hba->dev, "%s: Failed to get full descriptor length",
+			__func__);
+		return ret;
+	}
+
+	/* Check whether we need temp memory */
+	if (param_offset != 0 || param_size < buff_len) {
 		desc_buf = kmalloc(buff_len, GFP_KERNEL);
 		if (!desc_buf)
 			return -ENOMEM;
+	} else {
+		desc_buf = param_read_buf;
+		is_kmalloc = false;
 	}
 
+	/* Request for full descriptor */
 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-					desc_id, desc_index, 0, desc_buf,
-					&buff_len);
+					desc_id, desc_index, 0,
+					desc_buf, &buff_len);
 
 	if (ret) {
 		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
 			__func__, desc_id, desc_index, param_offset, ret);
-
 		goto out;
 	}
-
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (desc_id == QUERY_DESC_IDN_VENDOR) {
-		if (desc_buf[3] != (UFS_VENDOR_SAMSUNG & 0xFF)) {
-			dev_err(hba->dev, "%s: desc_id 0x%x : Invalid Signature - 0x%x%x%x%x.\n",
-				__func__, desc_id, desc_buf[3], desc_buf[2], desc_buf[1], desc_buf[0]);
-			ret = -EINVAL;
-		} else
-			ret = 0;
-
-		if (is_kmalloc)
-			memcpy(param_read_buf, &desc_buf[param_offset], param_size);
-		goto out;
-	}
-#endif
 
 	/* Sanity check */
 	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
@@ -2683,25 +2742,9 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
 		goto out;
 	}
 
-	/*
-	 * While reading variable size descriptors (like string descriptor),
-	 * some UFS devices may report the "LENGTH" (field in "Transaction
-	 * Specific fields" of Query Response UPIU) same as what was requested
-	 * in Query Request UPIU instead of reporting the actual size of the
-	 * variable size descriptor.
-	 * Although it's safe to ignore the "LENGTH" field for variable size
-	 * descriptors as we can always derive the length of the descriptor from
-	 * the descriptor header fields. Hence this change impose the length
-	 * match check only for fixed size descriptors (for which we always
-	 * request the correct size as part of Query Request UPIU).
-	 */
-	if ((desc_id != QUERY_DESC_IDN_STRING) &&
-			(buff_len != desc_buf[QUERY_DESC_LENGTH_OFFSET])) {
-		dev_err(hba->dev, "%s: desc_buf length mismatch: buff_len %d, buff_len(desc_header) %d",
-				__func__, buff_len, desc_buf[QUERY_DESC_LENGTH_OFFSET]);
-		ret = -EINVAL;
-		goto out;
-	}
+	/* Check wherher we will not copy more data, than available */
+	if (is_kmalloc && param_size > buff_len)
+		param_size = buff_len;
 
 	if (is_kmalloc)
 		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
@@ -2801,44 +2844,6 @@ out:
 	return err;
 }
 EXPORT_SYMBOL(ufshcd_read_string_desc);
-
-#ifdef CONFIG_JOURNAL_DATA_TAG
-SIO_PATCH_VERSION(Journal_tag, 1, 0, "");
-/**
- * ufshcd_read_vendor_specific_desc - read vendor specific descriptor
- *
- * @hba: pointer to adapter instance
- * @desc_id: descriptor IDN
- * @desc_index: descriptor index
- * @buf: pointer to buffer where descriptor would be read
- * @size: size of buf
- *
- * Return 0 in case of success, non-zero otherwise
- */
-int ufshcd_read_vendor_specific_desc(struct ufs_hba *hba, enum desc_idn desc_id,
-				   int desc_index, u8 *buf, u32 size)
-{
-	int err = 0;
-	int retries;
-
-	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-		/* Read descriptor*/
-		err = ufshcd_read_desc(hba,
-				       desc_id, desc_index, buf, size);
-		if (!err)
-			break;
-		if (err == QUERY_RESULT_INVALID_IDN)
-			break;
-		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
-	}
-
-	if (err)
-		dev_err(hba->dev, "%s: reading Vendor Specific Desc(index=0x%x) failed. err = %d\n",
-			__func__, desc_index, err);
-
-	return err;
-}
-#endif
 
 /**
  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
@@ -3724,7 +3729,7 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
 			__func__, err);
 		goto out;
 	}
-	
+
 	if (flag_res) {
 		dev_err(hba->dev,
 			"%s fDeviceInit was not cleared by the device\n",
@@ -4598,10 +4603,6 @@ static int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
 
 	val = hba->ee_ctrl_mask & ~mask;
 	val &= 0xFFFF; /* 2 bytes */
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	dev_info(hba->dev, "%s: ee_ctrl_mask=0x%x, mask=0x%x. val=0x%x.\n",
-			__func__, hba->ee_ctrl_mask, mask, val);
-#endif
 	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
 	if (!err)
@@ -4624,34 +4625,16 @@ static int ufshcd_enable_ee(struct ufs_hba *hba, u16 mask)
 {
 	int err = 0;
 	u32 val;
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	u32 status;
-#endif
 
 	if (hba->ee_ctrl_mask & mask)
 		goto out;
 
 	val = hba->ee_ctrl_mask | mask;
 	val &= 0xFFFF; /* 2 bytes */
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	dev_info(hba->dev, "%s: ee_ctrl_mask=0x%x, mask=0x%x. val=0x%x.\n",
-			__func__, hba->ee_ctrl_mask, mask, val);
-#endif
 	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
 	if (!err)
 		hba->ee_ctrl_mask |= mask;
-#ifdef CONFIG_JOURNAL_DATA_TAG
-#if defined(CONFIG_SCSI_UFS_QCOM)
-	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &status);
-#else
-	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &status);
-#endif
-	if (!err)
-		dev_info(hba->dev, "%s: EES = 0x%x.\n", __func__, status);
-#endif
 
 out:
 	return err;
@@ -4892,52 +4875,6 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
 		goto out;
 	}
 
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (status & MASK_EE_SYSPOOL_EVENT) {
-		struct ufshcd_lrb *lrbp;
-		struct scsi_cmnd *cmd;
-		unsigned long completed_reqs;
-		u32 tr_doorbell;
-		//int result;
-		int index;
-
-		dev_err(hba->dev, "%s: SYSPOOL_EXHAUSTED.\n", __func__);
-		/* To Do :
-		 * resp. UPIU's EVENT ALERT in Device info is checked already.
-		 * 1. unmap the system data
-		 *      __ufshcd_transfer_req_compl(hba, DID_ERROR);
-		 * ?. check again ee_status to confirm EXHAUSTED is released
-		 * in loop
-		 */
-		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-		completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
-
-		for_each_set_bit(index, &completed_reqs, hba->nutrs) {
-			lrbp = &hba->lrb[index];
-			cmd = lrbp->cmd;
-
-			if (cmd && (cmd->cmnd[6] & (1 << 4))) {/* Data Tag */
-				//result = ufshcd_transfer_rsp_status(hba, lrbp);
-				scsi_dma_unmap(cmd);
-				//cmd->result = result;
-				set_host_byte(cmd, DID_ERROR);
-				/* Mark completed command as NULL in LRB */
-				lrbp->cmd = NULL;
-				clear_bit_unlock(index, &hba->lrb_in_use);
-				/* Do not touch lrbp after scsi done */
-				cmd->scsi_done(cmd);
-#if defined(CONFIG_SCSI_UFS_QCOM)
-				__ufshcd_release(hba, false);
-				__ufshcd_pm_qos_release(hba, false);
-				__ufshcd_hibern8_release(hba, false);
-#else
-				__ufshcd_release(hba);
-#endif
-			}
-		}
-	}
-#endif
-
 	status &= hba->ee_ctrl_mask;
 
 	if (status & MASK_EE_URGENT_BKOPS)
@@ -5074,7 +5011,7 @@ static void ufshcd_err_handler(struct work_struct *work)
 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
 	    ((hba->saved_err & UIC_ERROR) &&
 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-				UFSHCD_UIC_DL_ERROR |				   
+				UFSHCD_UIC_DL_ERROR |
 				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
 				UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
 		needs_reset = true;
@@ -5921,8 +5858,8 @@ out:
 static void ufshcd_init_icc_levels(struct ufs_hba *hba)
 {
 	int ret;
-	int buff_len = QUERY_DESC_POWER_MAX_SIZE;
-	u8 desc_buf[QUERY_DESC_POWER_MAX_SIZE];
+	int buff_len = hba->desc_size.pwr_desc;
+	u8 desc_buf[hba->desc_size.pwr_desc];
 
 	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
 	if (ret) {
@@ -6014,22 +5951,18 @@ out:
 	return ret;
 }
 
-static int ufs_get_device_info(struct ufs_hba *hba,
-				struct ufs_device_info *card_data)
+static int ufs_get_device_desc(struct ufs_hba *hba,
+			       struct ufs_dev_desc *dev_desc)
 {
 	int err;
 	u8 model_index;
 	u8 serial_num_index;
-	u8 str_desc_buf[QUERY_DESC_STRING_MAX_SIZE + 1] = {0};
-	u8 desc_buf[QUERY_DESC_DEVICE_MAX_SIZE];
-	u8 health_buf[QUERY_DESC_HEALTH_MAX_SIZE];
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	u8 vendor_specific_buf[QUERY_DESC_VENDOR_SPECIFIC_SIZE];
-#endif
+	u8 str_desc_buf[QUERY_DESC_MAX_SIZE + 1] = {0};
+	u8 desc_buf[hba->desc_size.dev_desc];
+	u8 health_buf[hba->desc_size.heal_desc];
 	bool ascii_type;
 
-	err = ufshcd_read_device_desc(hba, desc_buf,
-					QUERY_DESC_DEVICE_MAX_SIZE);
+	err = ufshcd_read_device_desc(hba, desc_buf, hba->desc_size.dev_desc);
 	if (err) {
 		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
 			__func__, err);
@@ -6037,75 +5970,56 @@ static int ufs_get_device_info(struct ufs_hba *hba,
 	}
 
 	err = ufshcd_read_health_desc(hba, health_buf,
-					QUERY_DESC_HEALTH_MAX_SIZE);
+					hba->desc_size.heal_desc);
 	if (err)
 		printk("%s: DEVICE_HEALTH desc read fail, err  = %d\n", __FUNCTION__, err);
 
 	/* getting Life Time at Device Health DESC*/
-	card_data->lifetime = health_buf[HEALTH_DEVICE_DESC_PARAM_LIFETIMEA];
+	dev_desc->lifetime = health_buf[HEALTH_DEVICE_DESC_PARAM_LIFETIMEA];
 
 	/*
 	 * getting vendor (manufacturerID) and Bank Index in big endian
 	 * format
 	 */
-	card_data->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
+	dev_desc->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
 
-	hba->manufacturer_id = card_data->wmanufacturerid;
-	hba->lifetime = card_data->lifetime;
-
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (hba->manufacturer_id == UFS_VENDOR_SAMSUNG &&
-			hba->host->journal_tag == JOURNAL_TAG_UNKNOWN) {
-		vendor_specific_buf[4] = 0;
-		err = ufshcd_read_vendor_specific_desc(hba,
-				QUERY_DESC_IDN_VENDOR, 0, vendor_specific_buf,
-				QUERY_DESC_VENDOR_SPECIFIC_SIZE);
-		if (!err && (vendor_specific_buf[4] & 0x1)) {
-			dev_info(hba->dev, "%s: vendor_desc[4]=0x%x. setting UFS journal tag support to 1.\n",
-					__func__, vendor_specific_buf[4]);
-			hba->host->journal_tag = JOURNAL_TAG_ON;
-		} else {
-			dev_info(hba->dev, "%s: UFS does not support journal tag - vendor_desc[4]=0x%x.(err %d).\n",
-					__func__, vendor_specific_buf[4], err);
-			hba->host->journal_tag = JOURNAL_TAG_OFF;
-		}
-	}
-#endif
+	hba->manufacturer_id = dev_desc->wmanufacturerid;
+	hba->lifetime = dev_desc->lifetime;
 
 	/*product name*/
 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
 
-	memset(str_desc_buf, 0, QUERY_DESC_STRING_MAX_SIZE);
+	memset(str_desc_buf, 0, QUERY_DESC_MAX_SIZE);
 	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
-					QUERY_DESC_STRING_MAX_SIZE, ASCII_STD);
+				QUERY_DESC_MAX_SIZE, ASCII_STD);
 	if (err) {
 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
 			__func__, err);
 		goto out;
 	}
 
-	str_desc_buf[QUERY_DESC_STRING_MAX_SIZE] = '\0';
-	strlcpy(card_data->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
+	str_desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
+	strlcpy(dev_desc->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
 		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
 		      MAX_MODEL_LEN));
 
 	/* Null terminate the model string */
-	card_data->model[MAX_MODEL_LEN] = '\0';
+	dev_desc->model[MAX_MODEL_LEN] = '\0';
 
 	/*serial number*/
 	serial_num_index = desc_buf[DEVICE_DESC_PARAM_SN];
-	memset(str_desc_buf, 0, QUERY_DESC_STRING_MAX_SIZE);
+	memset(str_desc_buf, 0, QUERY_DESC_MAX_SIZE);
 
 	/*spec is unicode but sec use hex data*/
 	ascii_type = UTF16_STD;
 
 	err = ufshcd_read_string_desc(hba, serial_num_index, str_desc_buf,
-		 QUERY_DESC_STRING_MAX_SIZE, ascii_type);
+		 QUERY_DESC_MAX_SIZE, ascii_type);
 
 	if (err)
 		goto out;
-	str_desc_buf[QUERY_DESC_STRING_MAX_SIZE] = '\0';
+	str_desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
 
 	ufs_set_sec_unique_number(hba, str_desc_buf, desc_buf);
 
@@ -6115,25 +6029,15 @@ out:
 	return err;
 }
 
-void ufs_advertise_fixup_device(struct ufs_hba *hba)
+static void ufs_fixup_device_setup(struct ufs_hba *hba,
+				   struct ufs_dev_desc *dev_desc)
 {
-	int err;
 	struct ufs_dev_fix *f;
-	struct ufs_device_info card_data;
-
-	card_data.wmanufacturerid = 0;
-
-	err = ufs_get_device_info(hba, &card_data);
-	if (err) {
-		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
-			__func__, err);
-		return;
-	}
 
 	for (f = ufs_fixups; f->quirk; f++) {
-		if (((f->card.wmanufacturerid == card_data.wmanufacturerid) ||
-		    (f->card.wmanufacturerid == UFS_ANY_VENDOR)) &&
-		    (STR_PRFX_EQUAL(f->card.model, card_data.model) ||
+		if ((f->card.wmanufacturerid == dev_desc->wmanufacturerid ||
+		     f->card.wmanufacturerid == UFS_ANY_VENDOR) &&
+		    (STR_PRFX_EQUAL(f->card.model, dev_desc->model) ||
 		     !strcmp(f->card.model, UFS_ANY_MODEL)))
 			hba->dev_quirks |= f->quirk;
 	}
@@ -6228,6 +6132,57 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 10);
 }
 
+static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+{
+	int err;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_DEVICE, 0,
+		&hba->desc_size.dev_desc);
+	if (err)
+		hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_POWER, 0,
+		&hba->desc_size.pwr_desc);
+	if (err)
+		hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_INTERCONNECT, 0,
+		&hba->desc_size.interc_desc);
+	if (err)
+		hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_CONFIGURATION, 0,
+		&hba->desc_size.conf_desc);
+	if (err)
+		hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_UNIT, 0,
+		&hba->desc_size.unit_desc);
+	if (err)
+		hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_GEOMETRY, 0,
+		&hba->desc_size.geom_desc);
+	if (err)
+		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
+		&hba->desc_size.heal_desc);
+	if (err)
+		hba->desc_size.heal_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+}
+
+static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+{
+	hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
+	hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
+	hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
+	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+	hba->desc_size.heal_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+}
+
 /**
  * ufshcd_probe_hba - probe hba to detect device and initialize
  * @hba: per-adapter instance
@@ -6238,6 +6193,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
 {
 	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
 	int re_cnt = 0;
+	struct ufs_dev_desc card = {0};
 	int ret;
 	unsigned long flags;
 
@@ -6278,7 +6234,17 @@ retry:
 
 	dev_info(hba->dev, "UFS device initialized\n");
 
-	ufs_advertise_fixup_device(hba);
+	/* Init check for device descriptor sizes */
+	ufshcd_init_desc_sizes(hba);
+
+	ret = ufs_get_device_desc(hba, &card);
+	if (ret) {
+		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
+			__func__, ret);
+		goto out;
+	}
+
+	ufs_fixup_device_setup(hba, &card);
 	ufshcd_tune_unipro_params(hba);
 
 	ret = ufshcd_set_vccq_rail_unused(hba,
@@ -6286,10 +6252,6 @@ retry:
 	if (ret)
 		goto out;
 
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (hba->host->journal_tag == JOURNAL_TAG_ON)
-		hba->ee_ctrl_mask |= MASK_EE_SYSPOOL_EVENT;
-#endif
 	/* UFS device is also active now */
 	ufshcd_set_ufs_dev_active(hba);
 	ufshcd_force_reset_auto_bkops(hba);
@@ -6523,7 +6485,7 @@ static int ufshcd_query_ioctl(struct ufs_hba *hba, u8 lun, void __user *buffer)
 	case UPIU_QUERY_OPCODE_READ_DESC:
 		switch (ioctl_data->idn) {
 		case QUERY_DESC_IDN_DEVICE:
-		case QUERY_DESC_IDN_CONFIGURAION:
+		case QUERY_DESC_IDN_CONFIGURATION:
 		case QUERY_DESC_IDN_INTERCONNECT:
 		case QUERY_DESC_IDN_GEOMETRY:
 		case QUERY_DESC_IDN_POWER:
@@ -8127,7 +8089,7 @@ SEC_UFS_DATA_ATTR(SEC_UFS_err_sum, "\"OPERR\":\"%d\",\"UICCMD\":\"%d\",\"UICERR\
 
 UFS_DEV_ATTR(lt,  "%01x", hba->lifetime);
 UFS_DEV_ATTR(sense_err_count, "\"MEDIUM\":\"%d\",\"HWERR\":\"%d\"\n",
-						hba->host->medium_err_cnt, hba->host->hw_err_cnt); 
+						hba->host->medium_err_cnt, hba->host->hw_err_cnt);
 
 static ssize_t ufs_lc_info_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -8419,6 +8381,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 
 	hba->mmio_base = mmio_base;
 	hba->irq = irq;
+
+	/* Set descriptor lengths to specification defaults */
+	ufshcd_def_desc_sizes(hba);
 
 	err = ufshcd_hba_init(hba);
 	if (err)

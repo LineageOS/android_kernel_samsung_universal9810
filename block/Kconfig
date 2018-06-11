@@ -34,7 +34,7 @@ config LBDAF
 	  This option is required to support the full capacity of large
 	  (2TB+) block devices, including RAID, disk, Network Block Device,
 	  Logical Volume Manager (LVM) and loopback.
-	
+
 	  This option also enables support for single files larger than
 	  2TB.
 
@@ -111,21 +111,6 @@ config BLK_CMDLINE_PARSER
 	partitions on a block device.
 
 	See Documentation/block/cmdline-partition.txt for more information.
-
-config JOURNAL_DATA_TAG
-	bool "Enable FS journal tagging for UFS & eMMC"
-	default n
-	---help---
-	Enable FS journal tagging for UFS & eMMC.
-	If unsure, say N.
-
-config JOURNAL_DATA_TAG_DEBUG
-	bool "Enable FS journal tagging debug"
-	default n
-	depends on JOURNAL_DATA_TAG
-	---help---
-	Enable FS journal tagging debug. If unsure, say N.
-
 
 menu "Partition Types"
 

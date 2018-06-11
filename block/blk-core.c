@@ -1657,10 +1657,6 @@ void init_request_from_bio(struct request *req, struct bio *bio)
 	req->cmd_flags |= bio->bi_opf & REQ_COMMON_MASK;
 	if (bio->bi_opf & REQ_RAHEAD)
 		req->cmd_flags |= REQ_FAILFAST_MASK;
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	if (bio_flagged(bio, BIO_JOURNAL))
-		req->cmd_flags |= REQ_META;
-#endif
 
 	req->errors = 0;
 	req->__sector = bio->bi_iter.bi_sector;

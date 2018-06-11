@@ -589,9 +589,6 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
 	bio->bi_opf = bio_src->bi_opf;
 	bio->bi_iter = bio_src->bi_iter;
 	bio->bi_io_vec = bio_src->bi_io_vec;
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	bio->bi_flags |= bio_src->bi_flags & (1 << BIO_JOURNAL);
-#endif
 
 	bio_clone_blkcg_association(bio, bio_src);
 }
@@ -675,9 +672,6 @@ struct bio *bio_clone_bioset(struct bio *bio_src, gfp_t gfp_mask,
 	bio->bi_opf		= bio_src->bi_opf;
 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
-#ifdef CONFIG_JOURNAL_DATA_TAG
-	bio->bi_flags |= bio_src->bi_flags & (1 << BIO_JOURNAL);
-#endif
 
 	switch (bio_op(bio)) {
 	case REQ_OP_DISCARD:
@@ -1334,7 +1328,7 @@ struct bio *bio_map_user_iov(struct request_queue *q,
 
 			if (len <= 0)
 				break;
-			
+
 			if (bytes > len)
 				bytes = len;
 
