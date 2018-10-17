@@ -24,7 +24,7 @@
  *
  * <<Broadcom-WL-IPTag/Open:>>
  *
- * $Id: dhd_pcie_linux.c 768097 2018-06-18 12:45:00Z $
+ * $Id: dhd_pcie_linux.c 776907 2018-08-16 06:05:35Z $
  */
 
 /* include files */
@@ -930,6 +930,15 @@ int dhdpcie_pci_suspend_resume(dhd_bus_t *bus, bool state)
 		rc = dhdpcie_resume_host_dev(bus);
 		if (!rc) {
 			rc = dhdpcie_resume_dev(dev);
+			if (MULTIBP_ENAB(bus->sih) && (bus->sih->buscorerev >= 66)) {
+				/* reinit CTO configuration
+				 * because cfg space got reset at D3 (PERST)
+				 */
+				dhdpcie_cto_init(bus, bus->cto_enable);
+			}
+			if (bus->sih->buscorerev == 66) {
+				dhdpcie_ssreset_dis_enum_rst(bus);
+			}
 #if !defined(BCMPCIE_OOB_HOST_WAKE)
 			dhdpcie_pme_active(bus->osh, state);
 #endif // endif
@@ -1369,12 +1378,12 @@ void dhdpcie_dump_resource(dhd_bus_t *bus)
 	}
 
 	/* BAR0 */
-	DHD_ERROR(("%s: BAR0(VA): 0x%p, BAR0(PA): "PRINTF_RESOURCE", SIZE: %d\n",
+	DHD_ERROR(("%s: BAR0(VA): 0x%pK, BAR0(PA): "PRINTF_RESOURCE", SIZE: %d\n",
 		__FUNCTION__, pch->regs, pci_resource_start(bus->dev, 0),
 		DONGLE_REG_MAP_SIZE));
 
 	/* BAR1 */
-	DHD_ERROR(("%s: BAR1(VA): 0x%p, BAR1(PA): "PRINTF_RESOURCE", SIZE: %d\n",
+	DHD_ERROR(("%s: BAR1(VA): 0x%pK, BAR1(PA): "PRINTF_RESOURCE", SIZE: %d\n",
 		__FUNCTION__, pch->tcm, pci_resource_start(bus->dev, 2),
 		pch->tcm_size));
 }
@@ -1429,6 +1438,7 @@ int dhdpcie_init(struct pci_dev *pdev)
 #ifdef USE_SMMU_ARCH_MSM
 	dhdpcie_smmu_info_t	*dhdpcie_smmu_info = NULL;
 #endif /* USE_SMMU_ARCH_MSM */
+	int ret = 0;
 
 	do {
 		/* osl attach */
@@ -1513,8 +1523,8 @@ int dhdpcie_init(struct pci_dev *pdev)
 		}
 
 		/* Bus initialization */
-		bus = dhdpcie_bus_attach(osh, dhdpcie_info->regs, dhdpcie_info->tcm, pdev);
-		if (!bus) {
+		ret = dhdpcie_bus_attach(osh, &bus, dhdpcie_info->regs, dhdpcie_info->tcm, pdev);
+		if (ret != BCME_OK) {
 			DHD_ERROR(("%s:dhdpcie_bus_attach() failed\n", __FUNCTION__));
 			break;
 		}
@@ -1690,14 +1700,12 @@ irqreturn_t
 dhdpcie_isr(int irq, void *arg)
 {
 	dhd_bus_t *bus = (dhd_bus_t*)arg;
-	int32 ret;
 	bus->isr_entry_time = OSL_SYSUPTIME_US();
-	ret = dhdpcie_bus_isr(bus);
+	if (!dhdpcie_bus_isr(bus)) {
+		DHD_LOG_MEM(("%s: dhdpcie_bus_isr returns with FALSE\n", __FUNCTION__));
+	}
 	bus->isr_exit_time = OSL_SYSUPTIME_US();
-	if (ret)
-		return TRUE;
-	else
-		return FALSE;
+	return IRQ_HANDLED;
 }
 
 int
@@ -1855,7 +1863,10 @@ dhdpcie_disable_device(dhd_bus_t *bus)
 		return BCME_ERROR;
 	}
 
-	pci_disable_device(bus->dev);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
+	if (pci_is_enabled(bus->dev))
+#endif // endif
+		pci_disable_device(bus->dev);
 
 	return 0;
 }

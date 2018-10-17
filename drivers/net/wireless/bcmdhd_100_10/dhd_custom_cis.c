@@ -25,7 +25,7 @@
  *
  * <<Broadcom-WL-IPTag/Open:>>
  *
- * $Id: dhd_custom_cis.c 769448 2018-06-26 10:07:57Z $
+ * $Id: dhd_custom_cis.c 777300 2018-08-20 04:56:02Z $
  */
 
 #include <typedefs.h>

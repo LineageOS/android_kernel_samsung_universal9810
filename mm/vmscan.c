@@ -1332,6 +1332,53 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 	return ret;
 }
 
+/* A caller should guarantee that start and end pfns are in the same zone */
+void reclaim_contig_migrate_range(unsigned long start,
+						unsigned long end, bool drain)
+{
+	/* This function is based on __alloc_contig_migrate_range */
+	unsigned long nr_reclaimed;
+	unsigned long pfn = start;
+	struct compact_control cc = {
+		.mode = MIGRATE_SYNC_LIGHT,
+	};
+	unsigned long total_reclaimed = 0;
+
+	cc.nr_freepages = 0;
+	cc.nr_migratepages = 0;
+	cc.zone = page_zone(pfn_to_page(start));
+	INIT_LIST_HEAD(&cc.freepages);
+	INIT_LIST_HEAD(&cc.migratepages);
+
+	if (drain)
+		migrate_prep();
+
+	while (pfn < end) {
+		if (fatal_signal_pending(current)) {
+			pr_warn_once("%s %d got fatal signal\n",
+						__func__, __LINE__);
+			break;
+		}
+
+		if (list_empty(&cc.migratepages)) {
+			cc.nr_migratepages = 0;
+			pfn = isolate_migratepages_range(&cc, pfn, end);
+			if (!pfn)
+				break;
+		}
+
+		nr_reclaimed = reclaim_clean_pages_from_list(cc.zone,
+							&cc.migratepages);
+		cc.nr_migratepages -= nr_reclaimed;
+		total_reclaimed += nr_reclaimed;
+
+		/* Skip pages not reclaimed in the above */
+		if (cc.nr_migratepages)
+			putback_movable_pages(&cc.migratepages);
+	}
+	trace_printk("%lu\n", total_reclaimed << PAGE_SHIFT);
+}
+
 /*
  * Attempt to remove the specified page from its LRU.  Only take this page
  * if it is of the appropriate PageActive status.  Pages which are being

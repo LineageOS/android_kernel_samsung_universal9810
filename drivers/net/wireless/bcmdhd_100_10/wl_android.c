@@ -24,7 +24,7 @@
  *
  * <<Broadcom-WL-IPTag/Open:>>
  *
- * $Id: wl_android.c 757949 2018-04-17 05:07:38Z $
+ * $Id: wl_android.c 777330 2018-08-20 09:08:38Z $
  */
 
 #include <linux/module.h>
@@ -85,6 +85,7 @@
 #define CMD_BTCOEXMODE		"BTCOEXMODE"
 #define CMD_SETSUSPENDOPT	"SETSUSPENDOPT"
 #define CMD_SETSUSPENDMODE      "SETSUSPENDMODE"
+#define CMD_SETDTIM_IN_SUSPEND  "SET_DTIM_IN_SUSPEND"
 #define CMD_MAXDTIM_IN_SUSPEND  "MAX_DTIM_IN_SUSPEND"
 #define CMD_P2P_DEV_ADDR	"P2P_DEV_ADDR"
 #define CMD_SETFWPATH		"SETFWPATH"
@@ -145,6 +146,10 @@
 #define CMD_TEST_GET_TX_POWER		"TEST_GET_TX_POWER"
 #endif /* TEST_TX_POWER_CONTROL */
 #define CMD_SARLIMIT_TX_CONTROL		"SET_TX_POWER_CALLING"
+#ifdef SUPPORT_SET_TID
+#define CMD_SET_TID		"SET_TID"
+#define CMD_GET_TID		"GET_TID"
+#endif /* SUPPORT_SET_TID */
 #endif /* CUSTOMER_HW4_PRIVATE_CMD */
 #define CMD_KEEP_ALIVE		"KEEPALIVE"
 
@@ -387,8 +392,7 @@ static u8 miracast_cur_mode;
 #define CMD_NEW_DEBUG_PRINT_DUMP	"DEBUG_DUMP"
 #define SUBCMD_UNWANTED			"UNWANTED"
 #define SUBCMD_DISCONNECTED		"DISCONNECTED"
-extern void dhd_schedule_log_dump(dhd_pub_t *dhdp, log_dump_type_t *type);
-extern int dhd_bus_mem_dump(dhd_pub_t *dhd);
+void dhd_log_dump_trigger(dhd_pub_t *dhdp, int subcmd);
 #endif /* DHD_LOG_DUMP */
 
 #ifdef DHD_HANG_SEND_UP_TEST
@@ -1046,6 +1050,30 @@ static int wl_android_set_csa(struct net_device *dev, char *command)
 		return -1;
 	}
 	return 0;
+}
+
+static int
+wl_android_set_bcn_li_dtim(struct net_device *dev, char *command)
+{
+	int ret = 0;
+	int dtim;
+
+	dtim = *(command + strlen(CMD_SETDTIM_IN_SUSPEND) + 1) - '0';
+
+	if (dtim > (MAX_DTIM_ALLOWED_INTERVAL / MAX_DTIM_SKIP_BEACON_INTERVAL)) {
+		DHD_ERROR(("%s: failed, invalid dtim %d\n",
+			__FUNCTION__, dtim));
+		return BCME_ERROR;
+	}
+
+	if (!(ret = net_os_set_suspend_bcn_li_dtim(dev, dtim))) {
+		DHD_TRACE(("%s: SET bcn_li_dtim in suspend %d\n",
+			__FUNCTION__, dtim));
+	} else {
+		DHD_ERROR(("%s: failed %d\n", __FUNCTION__, ret));
+	}
+
+	return ret;
 }
 
 static int
@@ -4354,6 +4382,98 @@ wl_android_set_sarlimit_txctrl(struct net_device *dev, const char* string_num)
 	}
 	return 1;
 }
+
+#ifdef SUPPORT_SET_TID
+static int
+wl_android_set_tid(struct net_device *dev, char* command)
+{
+	int err = BCME_ERROR;
+	char *pos = command;
+	char *token = NULL;
+	uint8 mode = 0;
+	uint32 uid = 0;
+	uint8 prio = 0;
+	dhd_pub_t *dhdp = wl_cfg80211_get_dhdp(dev);
+
+	if (!dhdp) {
+		WL_ERR(("dhd is NULL\n"));
+		return err;
+	}
+
+	WL_DBG(("%s: command[%s]\n", __FUNCTION__, command));
+
+	/* drop command */
+	token = bcmstrtok(&pos, " ", NULL);
+
+	token = bcmstrtok(&pos, " ", NULL);
+	if (!token) {
+		WL_ERR(("Invalid arguments\n"));
+		return err;
+	}
+
+	mode = bcm_atoi(token);
+
+	if (mode < SET_TID_OFF || mode > SET_TID_BASED_ON_UID) {
+		WL_ERR(("Invalid arguments, mode %d\n", mode));
+			return err;
+	}
+
+	if (mode) {
+		token = bcmstrtok(&pos, " ", NULL);
+		if (!token) {
+			WL_ERR(("Invalid arguments for target uid\n"));
+			return err;
+		}
+
+		uid = bcm_atoi(token);
+
+		token = bcmstrtok(&pos, " ", NULL);
+		if (!token) {
+			WL_ERR(("Invalid arguments for target tid\n"));
+			return err;
+		}
+
+		prio = bcm_atoi(token);
+		if (prio >= 0 && prio <= MAXPRIO) {
+			dhdp->tid_mode = mode;
+			dhdp->target_uid = uid;
+			dhdp->target_tid = prio;
+		} else {
+			WL_ERR(("Invalid arguments, prio %d\n", prio));
+			return err;
+		}
+	} else {
+		dhdp->tid_mode = SET_TID_OFF;
+		dhdp->target_uid = 0;
+		dhdp->target_tid = 0;
+	}
+
+	WL_DBG(("%s mode [%d], uid [%d], tid [%d]\n", __FUNCTION__,
+		dhdp->tid_mode, dhdp->target_uid, dhdp->target_tid));
+
+	err = BCME_OK;
+	return err;
+}
+
+static int
+wl_android_get_tid(struct net_device *dev, char* command, int total_len)
+{
+	int bytes_written = BCME_ERROR;
+	dhd_pub_t *dhdp = wl_cfg80211_get_dhdp(dev);
+
+	if (!dhdp) {
+		WL_ERR(("dhd is NULL\n"));
+		return bytes_written;
+	}
+
+	bytes_written = snprintf(command, total_len, "mode %d uid %d tid %d",
+		dhdp->tid_mode, dhdp->target_uid, dhdp->target_tid);
+
+	WL_DBG(("%s: command results %s\n", __FUNCTION__, command));
+
+	return bytes_written;
+}
+#endif /* SUPPORT_SET_TID */
 #endif /* CUSTOMER_HW4_PRIVATE_CMD */
 
 int wl_android_set_roam_mode(struct net_device *dev, char *command)
@@ -5718,14 +5838,20 @@ wl_android_get_rssi_logging(struct net_device *dev, char *command, int total_len
 
 #ifdef SET_PCIE_IRQ_CPU_CORE
 void
-wl_android_set_irq_cpucore(struct net_device *net, int set)
+wl_android_set_irq_cpucore(struct net_device *net, int affinity_cmd)
 {
 	dhd_pub_t *dhdp = wl_cfg80211_get_dhdp(net);
 	if (!dhdp) {
 		WL_ERR(("dhd is NULL\n"));
 		return;
 	}
-	dhd_set_irq_cpucore(dhdp, set);
+
+	if (affinity_cmd < PCIE_IRQ_AFFINITY_OFF || affinity_cmd > PCIE_IRQ_AFFINITY_LAST) {
+		WL_ERR(("Wrong Affinity cmds:%d, %s\n", affinity_cmd, __FUNCTION__));
+		return;
+	}
+
+	dhd_set_irq_cpucore(dhdp, affinity_cmd);
 }
 #endif /* SET_PCIE_IRQ_CPU_CORE */
 
@@ -6583,46 +6709,6 @@ wl_android_get_adps_mode(
 }
 #endif /* WLADPS_PRIVATE_CMD */
 
-#ifdef DHD_LOG_DUMP
-void
-wl_android_dhd_log_dump(struct net_device *net, int subcmd)
-{
-	dhd_pub_t *dhdp = wl_cfg80211_get_dhdp(net);
-	log_dump_type_t *flush_type;
-
-	if (!dhdp) {
-		WL_ERR(("dhdp is NULL. Ignore private cmd - DEBUG_DUMP\n"));
-		return;
-	}
-
-	flush_type = MALLOCZ(dhdp->osh, sizeof(log_dump_type_t));
-	clear_debug_dump_time(dhdp->debug_dump_time_str);
-#ifdef DHD_PCIE_RUNTIMEPM
-	/* wake up RPM if SYSDUMP is triggered */
-	dhdpcie_runtime_bus_wake(dhdp, TRUE, __builtin_return_address(0));
-#endif /* DHD_PCIE_RUNTIMEPM */
-	/*  */
-	if (subcmd >= CMD_MAX || subcmd < CMD_DEFAULT) {
-		WL_ERR(("%s : Invalid subcmd \n", __FUNCTION__));
-		return;
-	} else {
-		dhdp->debug_dump_subcmd = subcmd;
-	}
-
-	if (flush_type) {
-		*flush_type = DLD_BUF_TYPE_ALL;
-		dhd_schedule_log_dump(dhdp, flush_type);
-	}
-#if defined(DHD_DEBUG) && defined(BCMPCIE) && defined(DHD_FW_COREDUMP)
-	dhdp->memdump_type = DUMP_TYPE_BY_SYSDUMP;
-	dhd_bus_mem_dump(dhdp);
-#endif /* DHD_DEBUG && BCMPCIE && DHD_FW_COREDUMP */
-#ifdef DHD_PKT_LOGGING
-	dhd_schedule_pktlog_dump(dhdp);
-#endif /* DHD_PKT_LOGGING */
-}
-#endif /* DHD_LOG_DUMP */
-
 int
 wl_handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 {
@@ -6719,6 +6805,9 @@ wl_handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 	}
 	else if (strnicmp(command, CMD_SETSUSPENDMODE, strlen(CMD_SETSUSPENDMODE)) == 0) {
 		bytes_written = wl_android_set_suspendmode(net, command);
+	}
+	else if (strnicmp(command, CMD_SETDTIM_IN_SUSPEND, strlen(CMD_SETDTIM_IN_SUSPEND)) == 0) {
+		bytes_written = wl_android_set_bcn_li_dtim(net, command);
 	}
 	else if (strnicmp(command, CMD_MAXDTIM_IN_SUSPEND, strlen(CMD_MAXDTIM_IN_SUSPEND)) == 0) {
 		bytes_written = wl_android_set_max_dtim(net, command);
@@ -7149,6 +7238,14 @@ wl_handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 		int skip = strlen(CMD_SARLIMIT_TX_CONTROL) + 1;
 		wl_android_set_sarlimit_txctrl(net, (const char*)command+skip);
 	}
+#ifdef SUPPORT_SET_TID
+	else if (strnicmp(command, CMD_SET_TID, strlen(CMD_SET_TID)) == 0) {
+		bytes_written = wl_android_set_tid(net, command);
+	}
+	else if (strnicmp(command, CMD_GET_TID, strlen(CMD_GET_TID)) == 0) {
+		bytes_written = wl_android_get_tid(net, command, priv_cmd.total_len);
+	}
+#endif /* SUPPORT_SET_TID */
 #endif /* CUSTOMER_HW4_PRIVATE_CMD */
 	else if (strnicmp(command, CMD_HAPD_MAC_FILTER, strlen(CMD_HAPD_MAC_FILTER)) == 0) {
 		int skip = strlen(CMD_HAPD_MAC_FILTER) + 1;
@@ -7370,27 +7467,28 @@ wl_handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 #ifdef DHD_LOG_DUMP
 	else if (strnicmp(command, CMD_NEW_DEBUG_PRINT_DUMP,
 		strlen(CMD_NEW_DEBUG_PRINT_DUMP)) == 0) {
+		dhd_pub_t *dhdp = wl_cfg80211_get_dhdp(net);
 		/* check whether it has more command */
 		if (strnicmp(command + strlen(CMD_NEW_DEBUG_PRINT_DUMP), " ", 1) == 0) {
 			/* compare unwanted/disconnected command */
 			if (strnicmp(command + strlen(CMD_NEW_DEBUG_PRINT_DUMP) + 1,
 					SUBCMD_UNWANTED, strlen(SUBCMD_UNWANTED)) == 0) {
-				wl_android_dhd_log_dump(net, CMD_UNWANTED);
+				dhd_log_dump_trigger(dhdp, CMD_UNWANTED);
 			} else if (strnicmp(command + strlen(CMD_NEW_DEBUG_PRINT_DUMP) + 1,
 					SUBCMD_DISCONNECTED, strlen(SUBCMD_DISCONNECTED)) == 0) {
-				wl_android_dhd_log_dump(net, CMD_DISCONNECTED);
+				dhd_log_dump_trigger(dhdp, CMD_DISCONNECTED);
 			} else {
-				wl_android_dhd_log_dump(net, CMD_DEFAULT);
+				dhd_log_dump_trigger(dhdp, CMD_DEFAULT);
 			}
 		} else {
-			wl_android_dhd_log_dump(net, CMD_DEFAULT);
+			dhd_log_dump_trigger(dhdp, CMD_DEFAULT);
 		}
 	}
 #endif /* DHD_LOG_DUMP */
 #ifdef SET_PCIE_IRQ_CPU_CORE
 	else if (strnicmp(command, CMD_PCIE_IRQ_CORE, strlen(CMD_PCIE_IRQ_CORE)) == 0) {
-		int set = *(command + strlen(CMD_PCIE_IRQ_CORE) + 1) - '0';
-		wl_android_set_irq_cpucore(net, set);
+		int affinity_cmd = *(command + strlen(CMD_PCIE_IRQ_CORE) + 1) - '0';
+		wl_android_set_irq_cpucore(net, affinity_cmd);
 	}
 #endif /* SET_PCIE_IRQ_CPU_CORE */
 #if defined(DHD_HANG_SEND_UP_TEST)

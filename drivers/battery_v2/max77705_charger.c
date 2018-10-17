@@ -734,16 +734,71 @@ static void max77705_set_charger_state(struct max77705_charger_data *charger, in
 		cnfg_00, cnfg_12);
 }
 
-static void max77705_set_otg(struct max77705_charger_data *charger, int enable)
+static void max77705_set_skipmode(struct max77705_charger_data *charger, int enable)
+{
+
+	if (enable) {
+		/* Auto skip mode */
+		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
+				(MAX77705_AUTO_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
+				CHG_CNFG_12_REG_DISKIP_MASK);
+	} else {
+		/* Disable skip mode */
+		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
+				(MAX77705_DISABLE_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
+				CHG_CNFG_12_REG_DISKIP_MASK);
+	}
+}
+
+static int max77705_check_wcin_before_otg_on(struct max77705_charger_data *charger)
+{
+    union power_supply_propval value = {0,};
+    struct power_supply *psy;
+    u8 reg_data;
+
+    psy = get_power_supply_by_name("wireless");
+    if (!psy)
+        return -ENODEV;
+    if ((psy->desc->get_property != NULL) &&
+        (psy->desc->get_property(psy, POWER_SUPPLY_PROP_ONLINE, &value) >= 0)) {
+        if (value.intval)
+            return 0;
+    } else
+        return -ENODEV;
+    power_supply_put(psy);
+
+    max77705_read_reg(charger->i2c, MAX77705_CHG_REG_DETAILS_00, &reg_data);
+    reg_data = ((reg_data & MAX77705_WCIN_DTLS) >> MAX77705_WCIN_DTLS_SHIFT);
+    if ((reg_data != 0x03) || (charger->pdata->wireless_charger_name == NULL))
+        return 0;
+
+    psy_do_property(charger->pdata->wireless_charger_name, get,
+        POWER_SUPPLY_PROP_ENERGY_NOW, value);
+    if (value.intval <= 0)
+        return -ENODEV;
+
+    value.intval = WIRELESS_VOUT_5V;
+    psy_do_property(charger->pdata->wireless_charger_name, set,
+        POWER_SUPPLY_PROP_INPUT_VOLTAGE_REGULATION, value);
+    return 0;
+}
+
+static int max77705_set_otg(struct max77705_charger_data *charger, int enable)
 {
 	union power_supply_propval value;
 	u8 reg = 0;
 	static u8 chg_int_state;
+	int ret = 0;
 
 	pr_info("%s: CHGIN-OTG %s\n", __func__,
 		enable > 0 ? "on" : "off");
-	if (charger->otg_on == enable || lpcharge)
-		return;
+	if (charger->otg_on == enable ||lpcharge)
+		return 0;
+		
+	ret = max77705_check_wcin_before_otg_on(charger);
+	pr_info("%s: wc_state = %d\n", __func__, ret);
+	if (ret < 0)
+		return ret;
 
 	wake_lock(&charger->otg_wake_lock);
 	mutex_lock(&charger->charger_mutex);
@@ -773,15 +828,7 @@ static void max77705_set_otg(struct max77705_charger_data *charger, int enable)
 				CHG_CNFG_08_REG_FSW_MASK);
 
 		/* Disable skip mode */
-		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
-				(MAX77705_DISABLE_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
-				CHG_CNFG_12_REG_DISKIP_MASK);
-
-		/* OTG off, boost on */
-		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_00,
-				    CHG_CNFG_00_BOOST_MASK, CHG_CNFG_00_OTG_CTRL);
-
-		msleep(100);
+		max77705_set_skipmode(charger, 0);
 
 		/* OTG on, boost on */
 		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_00,
@@ -806,9 +853,7 @@ static void max77705_set_otg(struct max77705_charger_data *charger, int enable)
 				CHG_CNFG_08_REG_FSW_MASK);
 
 		/* Auto skip mode */
-		max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
-				(MAX77705_AUTO_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
-				CHG_CNFG_12_REG_DISKIP_MASK);
+		max77705_set_skipmode(charger, 1);
 
 #if defined(CONFIG_CHARGER_MAX77705_OTG_LIMIT)
 		max77705_set_otg_limit(charger, MAX77705_LIMIT_STEP_DEFAULT);
@@ -823,6 +868,8 @@ static void max77705_set_otg(struct max77705_charger_data *charger, int enable)
 	pr_info("%s: INT_MASK(0x%x), CHG_CNFG_00(0x%x)\n",
 		__func__, chg_int_state, reg);
 	power_supply_changed(charger->psy_otg);
+
+	return 0;
 }
 
 static void max77705_check_slow_charging(struct max77705_charger_data *charger,
@@ -909,10 +956,6 @@ static void max77705_charger_initialize(struct max77705_charger_data *charger)
 	 */
 	max77705_set_float_voltage(charger, charger->pdata->chg_float_voltage);
 
-	/* MINVSYS 3.4V */
-	max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_04,
-				0x0 << MAX77705_CHG_MINVSYS_SHIFT,  MAX77705_CHG_MINVSYS_MASK);
-
 	/* VCHGIN : REG=4.5V, UVLO=4.7V, WCHGIN : REG=4.5V, UVLO=4.7V */
 	max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
 			    0x00,  CHG_CNFG_12_VCHGIN_REG_MASK | CHG_CNFG_12_WCIN_REG_MASK);
@@ -950,9 +993,7 @@ static void max77705_charger_initialize(struct max77705_charger_data *charger)
 			CHG_CNFG_08_REG_FSW_MASK);
 
 	/* Auto skip mode */
-	max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
-			(MAX77705_AUTO_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
-			CHG_CNFG_12_REG_DISKIP_MASK);
+	max77705_set_skipmode(charger, 1);
 
 	max77705_test_read(charger);
 }
@@ -1249,6 +1290,7 @@ static int max77705_chg_set_property(struct power_supply *psy,
 	static u8 chg_int_state;
 	int buck_state = ENABLE;
 	enum power_supply_ext_property ext_psp = psp;
+	union power_supply_propval value = {0, };
 
 	/* check unlock status before does set the register */
 	max77705_charger_unlock(charger);
@@ -1269,8 +1311,19 @@ static int max77705_chg_set_property(struct power_supply *psy,
 			charger->is_charging = true;
 			break;
 		}
-		max77705_set_buck(charger, buck_state);
-		max77705_set_charger_state(charger, charger->is_charging);
+		psy_do_property(charger->pdata->wireless_charger_name,
+					get, POWER_SUPPLY_PROP_ONLINE, value);
+		pr_info("%s: wireless_chg(%d), otg(%d)\n", __func__, value.intval, charger->otg_on);
+		if (value.intval && charger->otg_on) {
+			msleep(200);
+			max77705_set_buck(charger, buck_state);
+			max77705_set_charger_state(charger, charger->is_charging);
+			msleep(5);
+			max77705_set_skipmode(charger, 0);
+		} else {
+			max77705_set_buck(charger, buck_state);
+			max77705_set_charger_state(charger, charger->is_charging);
+		}
 		break;
 	case POWER_SUPPLY_PROP_ONLINE:
 		charger->cable_type = val->intval;
@@ -1352,6 +1405,10 @@ static int max77705_chg_set_property(struct power_supply *psy,
 		}
 		break;
 	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT:
+		if (charger->otg_on) {
+			pr_info("%s: SKIP MODE (%d)\n", __func__, val->intval);
+			max77705_set_skipmode(charger, val->intval);
+		}
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_FULL:
 		max77705_set_topoff_current(charger, val->intval);
@@ -1414,9 +1471,7 @@ static int max77705_chg_set_property(struct power_supply *psy,
 					CHG_CNFG_08_REG_FSW_MASK);
 
 			/* Disable skip mode */
-			max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
-					(MAX77705_DISABLE_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
-					CHG_CNFG_12_REG_DISKIP_MASK);
+			max77705_set_skipmode(charger, 0);
 
 			/* UNO on, boost on */
 			max77705_update_reg(charger->i2c,
@@ -1442,9 +1497,7 @@ static int max77705_chg_set_property(struct power_supply *psy,
 					CHG_CNFG_08_REG_FSW_MASK);
 
 			/* Auto skip mode */
-			max77705_update_reg(charger->i2c, MAX77705_CHG_REG_CNFG_12,
-					(MAX77705_AUTO_SKIP << CHG_CNFG_12_REG_DISKIP_SHIFT),
-					CHG_CNFG_12_REG_DISKIP_MASK);
+			max77705_set_skipmode(charger, 1);
 		}
 		max77705_read_reg(charger->i2c, MAX77705_CHG_REG_INT_MASK,
 				  &chg_int_state);
@@ -1514,6 +1567,26 @@ static int max77705_otg_set_property(struct power_supply *psy,
 	switch (psp) {
 	case POWER_SUPPLY_PROP_ONLINE:
 		max77705_set_otg(charger, val->intval);
+		if (val->intval && (charger->irq_aicl_enabled == 1)) {
+			u8 reg;
+			charger->irq_aicl_enabled = 0;
+			disable_irq_nosync(charger->irq_aicl);
+			cancel_delayed_work(&charger->aicl_work);
+			wake_unlock(&charger->aicl_wake_lock);
+			max77705_read_reg(charger->i2c,
+					  MAX77705_CHG_REG_INT_MASK, &reg);
+			pr_info("%s : disable aicl : 0x%x\n", __func__, reg);
+			charger->prev_aicl_mode = false;
+			charger->aicl_on = false;
+			charger->slow_charging = false;
+		} else if (!val->intval && (charger->irq_aicl_enabled == 0)) {
+			u8 reg;
+			charger->irq_aicl_enabled = 1;
+			enable_irq(charger->irq_aicl);
+			max77705_read_reg(charger->i2c,
+					  MAX77705_CHG_REG_INT_MASK, &reg);
+			pr_info("%s : enable aicl : 0x%x\n", __func__, reg);
+		}
 		break;
 	default:
 		return -EINVAL;
@@ -1865,8 +1938,10 @@ static void max77705_aicl_isr_work(struct work_struct *work)
 	}
 
 	charger->prev_aicl_mode = aicl_mode;
-	max77705_update_reg(charger->i2c,
-			    MAX77705_CHG_REG_INT_MASK, 0, MAX77705_AICL_IM);
+	if (charger->irq_aicl_enabled == 1) {
+		max77705_update_reg(charger->i2c,
+				    MAX77705_CHG_REG_INT_MASK, 0, MAX77705_AICL_IM);
+	}
 	mutex_unlock(&charger->charger_mutex);
 	if (!aicl_mode)
 		wake_unlock(&charger->aicl_wake_lock);

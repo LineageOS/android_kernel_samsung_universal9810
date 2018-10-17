@@ -728,7 +728,8 @@ enum aa_capture_intent {
 	AA_CAPTURE_INTENT_STILL_CAPTURE_DEBLUR_DYNAMIC_SHOT,
 	AA_CAPTURE_INTENT_STILL_CAPTURE_OIS_DYNAMIC_SHOT,
 	AA_CAPTURE_INTENT_STILL_CAPTURE_EXPOSURE_DYNAMIC_SHOT,
-	AA_CAPTURE_INTENT_STILL_CAPTURE_HDR_DYNAMIC_SHOT,
+	AA_CAPTURE_INTENT_STILL_CAPTURE_MFHDR_DYNAMIC_SHOT,
+	AA_CAPTURE_INTENT_STILL_CAPTURE_LLHDR_DYNAMIC_SHOT,
 	AA_CAPTURE_INTENT_STILL_CAPTURE_CANCEL,
 };
 
@@ -1865,8 +1866,9 @@ struct camera2_uctl {
 	struct camera2_is_hw_lls_uctl	hwlls_mode;
 	uint32_t			statsRoi[4];
 	enum aa_cameratype		masterCam;
-	int32_t                         productColorInfo;    
-	uint32_t			reserved[9];
+	int32_t                         productColorInfo;
+	uint8_t                         countryCode[4];
+	uint32_t			reserved[8];
 };
 
 struct camera2_udm {

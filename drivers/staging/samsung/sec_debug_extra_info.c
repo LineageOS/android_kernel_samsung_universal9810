@@ -26,7 +26,7 @@
 #define SZ_96	0x00000060
 #define SZ_960	0x000003c0
 
-#define EXTRA_VERSION	"RA30"
+#define EXTRA_VERSION	"RE25"
 /******************************************************************************
  * sec_debug_extra_info details
  *
@@ -56,6 +56,7 @@ struct sec_debug_panic_extra_info sec_debug_extra_info_init = {
 		{"BUS",		"", SZ_128},
 		{"DPM",		"", SZ_32},
 		{"SMP",		"", SZ_8},
+		{"RSTCNT",	"", SZ_8},
 		{"ETC",		"", SZ_256},
 		{"ESR",		"", SZ_64},
 		{"MER",		"", SZ_16},
@@ -88,6 +89,8 @@ struct sec_debug_panic_extra_info sec_debug_extra_info_init = {
 		{"PINT2",	"", SZ_8},
 		{"PINT5",	"", SZ_8},
 		{"PINT6",	"", SZ_8},
+		{"PSTS1",	"", SZ_8},
+		{"PSTS2",	"", SZ_8},
 		{"RVD1",	"", SZ_256},
 		{"RVD2",	"", SZ_256},
 		{"RVD3",	"", SZ_256},
@@ -103,6 +106,18 @@ struct sec_debug_panic_extra_info sec_debug_extra_info_init = {
 		{"CPU5",	"", SZ_256},
 		{"CPU6",	"", SZ_256},
 		{"CPU7",	"", SZ_256},
+		{"FRQL0",	"", SZ_8},
+		{"FRQL1",	"", SZ_8},
+		{"FRQL2",	"", SZ_8},
+		{"FRQB0",	"", SZ_8},
+		{"FRQB1",	"", SZ_8},
+		{"FRQB2",	"", SZ_8},
+		{"FRQM0",	"", SZ_8},
+		{"FRQM1",	"", SZ_8},
+		{"FRQM2",	"", SZ_8},
+		{"FRQI0",	"", SZ_8},
+		{"FRQI1",	"", SZ_8},
+		{"FRQI2",	"", SZ_8},
 
 		/* core lockup information */
 		{"MID",		"", SZ_32},
@@ -210,6 +225,7 @@ void sec_debug_set_extra_info(enum sec_debug_extra_buf_type type,
 void sec_debug_store_extra_info(int start, int end)
 {
 	int i;
+	int maxlen = MAX_EXTRA_INFO_KEY_LEN + MAX_EXTRA_INFO_VAL_LEN + 10;
 	char *ptr = (char *)SEC_DEBUG_EXTRA_INFO_VA;
 
 	/* initialize extra info output buffer */
@@ -218,16 +234,16 @@ void sec_debug_store_extra_info(int start, int end)
 	if (!sec_debug_extra_info_backup)
 		return;
 
-	ptr += sprintf(ptr, "\"%s\":\"%s\"", sec_debug_extra_info_backup->item[start].key,
+	ptr += snprintf(ptr, maxlen, "\"%s\":\"%s\"", sec_debug_extra_info_backup->item[start].key,
 		sec_debug_extra_info_backup->item[start].val);
 
 	for (i = start + 1; i < end; i++) {
-		if (ptr + strlen(sec_debug_extra_info_backup->item[i].key) +
-				strlen(sec_debug_extra_info_backup->item[i].val) +
+		if (ptr + strnlen(sec_debug_extra_info_backup->item[i].key, MAX_EXTRA_INFO_KEY_LEN) +
+			strnlen(sec_debug_extra_info_backup->item[i].val, MAX_EXTRA_INFO_VAL_LEN) +
 				MAX_EXTRA_INFO_HDR_LEN > (char *)SEC_DEBUG_EXTRA_INFO_VA + SZ_1K)
 			break;
 
-		ptr += sprintf(ptr, ",\"%s\":\"%s\"",
+		ptr += snprintf(ptr, maxlen, ",\"%s\":\"%s\"",
 			sec_debug_extra_info_backup->item[i].key,
 			sec_debug_extra_info_backup->item[i].val);
 	}
@@ -276,6 +292,7 @@ void sec_debug_store_extra_info_M(void)
 void sec_debug_store_extra_info_F(void)
 {
 	int i;
+	int maxlen = MAX_EXTRA_INFO_KEY_LEN + MAX_EXTRA_INFO_VAL_LEN + 10;
 	char *ptr = (char *)SEC_DEBUG_EXTRA_INFO_VA;
 
 	/* initialize extra info output buffer */
@@ -284,12 +301,15 @@ void sec_debug_store_extra_info_F(void)
 	if (!sec_debug_extra_info_pmudbg)
 		return;
 
-	ptr += sprintf(ptr, "\"FID\":\"%s\"", sec_debug_extra_info_backup->item[INFO_AID].val);
+	ptr += snprintf(ptr, maxlen, "\"FID\":\"%s\"",
+				sec_debug_extra_info_backup->item[INFO_AID].val);
+
 	if (!strcmp(sec_debug_extra_info_pmudbg->item[0].key, "START")) {
 		for (i = 0; i < PMUDBG_MAX; i++) {
 			if (!strcmp(sec_debug_extra_info_pmudbg->item[i].key, "END"))
 				break;
-			ptr += sprintf(ptr, ",\"%s\":\"%s\"",
+
+			ptr += snprintf(ptr, maxlen, ",\"%s\":\"%s\"",
 				sec_debug_extra_info_pmudbg->item[i].key,
 				sec_debug_extra_info_pmudbg->item[i].val);
 		}
@@ -425,7 +445,9 @@ void sec_debug_set_extra_info_backtrace(struct pt_regs *regs)
 		if (offset)
 			offset += sprintf((char *)sec_debug_extra_info->item[INFO_STACK].val + offset, ":");
 
-		sprintf((char *)sec_debug_extra_info->item[INFO_STACK].val + offset, "%s", buf);
+		snprintf((char *)sec_debug_extra_info->item[INFO_STACK].val + offset,
+				MAX_EXTRA_INFO_VAL_LEN, "%s", buf);
+
 		offset += sym_name_len;
 	}
 }
@@ -475,7 +497,8 @@ void sec_debug_set_extra_info_backtrace_cpu(struct pt_regs *regs, int cpu)
 		if (offset)
 			offset += sprintf((char *)sec_debug_extra_info->item[INFO_CPU0 + (cpu % 8)].val + offset, ":");
 
-		sprintf((char *)sec_debug_extra_info->item[INFO_CPU0 + (cpu % 8)].val + offset, "%s", buf);
+		snprintf((char *)sec_debug_extra_info->item[INFO_CPU0 + (cpu % 8)].val + offset,
+				MAX_EXTRA_INFO_VAL_LEN, "%s", buf);
 		offset += sym_name_len;
 	}
 }

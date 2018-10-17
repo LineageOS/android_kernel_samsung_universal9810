@@ -51,6 +51,9 @@
 #define FPS_TO_DURATION_US(x)  ((x == 0) ? (0) : ((1000 * 1000) / x))
 #define DURATION_US_TO_FPS(x)  ((x == 0) ? (0) : ((1000 * 1000) / x))
 
+/* static memory size for DDK/RTA backup data */
+#define STATIC_DATA_SIZE	100
+
 enum DIFF_BET_SEN_ISP { /* Set to 0: 3AA 3frame delay, 1: 3AA 4frame delay, 3: M2M */
 	DIFF_OTF_DELAY	= 0,
 	DIFF_M2M_DELAY	= 3
@@ -59,6 +62,11 @@ enum DIFF_BET_SEN_ISP { /* Set to 0: 3AA 3frame delay, 1: 3AA 4frame delay, 3: M
 enum SENSOR_CONTROL_DELAY {
 	N_PLUS_TWO_FRAME = 0,
 	N_PLUS_ONE_FRAME = 1,
+};
+
+enum {
+	ITF_CTRL_ID_DDK = 0,
+	ITF_CTRL_ID_RTA = 1,
 };
 
 /* DEVICE SENSOR INTERFACE */
@@ -308,6 +316,8 @@ struct fimc_is_cis_ops {
 	int (*cis_update_pdaf_tail_size)(struct v4l2_subdev *subdev, struct fimc_is_sensor_cfg *select);
 #endif
 	int (*cis_check_rev)(struct v4l2_subdev *subdev);
+	int (*cis_set_super_slow_motion_threshold)(struct v4l2_subdev *subdev, u32 threshold);
+	int (*cis_get_super_slow_motion_threshold)(struct v4l2_subdev *subdev, u32 *threshold);
 };
 
 struct fimc_is_sensor_ctl
@@ -507,6 +517,7 @@ struct fimc_is_ois_ops {
 	bool (*ois_auto_test_rear2)(struct fimc_is_core *core,
 	int threshold, bool *x_result, bool *y_result, int *sin_x, int *sin_y,
 	bool *x_result_2nd, bool *y_result_2nd, int *sin_x_2nd, int *sin_y_2nd);
+	int (*ois_set_power_mode)(struct v4l2_subdev *subdev);
 #endif
 	bool (*ois_check_fw)(struct fimc_is_core *core);
 	void (*ois_enable)(struct fimc_is_core *core);
@@ -520,6 +531,7 @@ struct fimc_is_ois_ops {
 	int (*ois_read_fw_ver)(char *name, char *ver);
 	int (*ois_center_shift)(struct v4l2_subdev *subdev);
 	int (*ois_set_center)(struct v4l2_subdev *subdev);
+	u8 (*ois_read_mode)(struct v4l2_subdev *subdev);
 };
 
 struct fimc_is_sensor_interface;
@@ -731,7 +743,9 @@ struct fimc_is_cis_ext2_interface_ops {
 	int (*set_low_noise_mode)(struct fimc_is_sensor_interface *itf, u32 mode);
 	int (*get_sensor_max_dynamic_fps)(struct fimc_is_sensor_interface *itf,
 				u32 *max_dynamic_fps);
-	void *reserved[18];
+	/* Get static memory address for DDK/RTA backup data */
+	int (*get_static_mem)(int ctrl_id, void **mem, int *size);
+	void *reserved[17];
 };
 
 struct fimc_is_cis_event_ops {

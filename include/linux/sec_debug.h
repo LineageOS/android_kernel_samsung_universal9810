@@ -31,7 +31,8 @@ extern void sec_debug_reboot_handler(void *p);
 extern void sec_debug_panic_handler(void *buf, bool dump);
 extern void sec_debug_post_panic_handler(void);
 
-extern int  sec_debug_get_debug_level(void);
+extern int sec_debug_get_debug_level(void);
+extern int sec_debug_enter_upload(void);
 extern void sec_debug_disable_printk_process(void);
 extern char *verbose_reg(int cpu_type, int reg_name, unsigned long reg_val);
 /* getlog support */
@@ -193,6 +194,7 @@ enum sec_debug_extra_buf_type {
 	INFO_BUSMON,
 	INFO_DPM,
 	INFO_SMPL,
+	INFO_RSTCNT,
 	INFO_ETC,
 	INFO_ESR,
 	INFO_MERR,
@@ -225,6 +227,8 @@ enum sec_debug_extra_buf_type {
 	INFO_PINT2,
 	INFO_PINT5,
 	INFO_PINT6,
+	INFO_PSTS1,
+	INFO_PSTS2,
 	INFO_RVD1,
 	INFO_RVD2,
 	INFO_RVD3,
@@ -240,6 +244,18 @@ enum sec_debug_extra_buf_type {
 	INFO_CPU5,
 	INFO_CPU6,
 	INFO_CPU7,
+	INFO_FRQL0,
+	INFO_FRQL1,
+	INFO_FRQL2,
+	INFO_FRQB0,
+	INFO_FRQB1,
+	INFO_FRQB2,
+	INFO_FRQM0,
+	INFO_FRQM1,
+	INFO_FRQM2,
+	INFO_FRQI0,
+	INFO_FRQI1,
+	INFO_FRQI2,
 	INFO_MAX_C,
 
 	INFO_MID = INFO_MAX_C,
@@ -410,6 +426,28 @@ extern void register_set_auto_comm_lastfreq(void (*func)(int type, int old_freq,
 extern void print_ppmpu_protection(struct pt_regs *regs);
 #else
 static inline void print_ppmpu_protection(struct pt_regs *regs) {}
+#endif
+
+#ifdef CONFIG_SEC_DEBUG_BRANCH_VERIFIER
+enum br_state {
+	BRSTATE_INIT,
+	BRSTATE_PCLR,
+	BRSTATE_NORMAL,
+	BRSTATE_NORMAL_PC,
+};
+
+struct branch_info {
+	unsigned long lr;
+	unsigned long regs_lr;
+	unsigned long regs_fp;
+	int state;
+	int log_pos;
+};
+
+extern void init_branch_info(struct branch_info *info);
+extern void pre_check_backtrace_auto_summary(struct branch_info *info, unsigned long where, unsigned long fp);
+extern void check_backtrace(struct branch_info *info, unsigned long where, unsigned long fp, unsigned int fromirq, struct pt_regs *regs);
+extern void check_backtrace_auto_summary(struct branch_info *info, unsigned long where, unsigned long fp, unsigned int fromirq, struct pt_regs *regs);
 #endif
 
 #ifdef CONFIG_SEC_DEBUG_LAST_KMSG
