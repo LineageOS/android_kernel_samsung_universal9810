@@ -310,7 +310,7 @@ $(obj)/%.dtb.S: $(obj)/%.dtb
 
 quiet_cmd_dtc = DTC     $@
 cmd_dtc = mkdir -p $(dir ${dtc-tmp}) ; \
-	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
+	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp $(LINUXINCLUDE) -o $(dtc-tmp) $< ; \
 	$(DTC) -O dtb -o $@ -b 0 -a 4\
 		-i $(dir $<) $(DTC_FLAGS) \
 		-d $(depfile).dtc.tmp $(dtc-tmp) ; \

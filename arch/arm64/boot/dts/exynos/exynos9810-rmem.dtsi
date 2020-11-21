@@ -9,6 +9,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <generated/autoconf.h>
 #include <dt-bindings/soc/samsung/exynos-ss-table.h>
 
 / {
