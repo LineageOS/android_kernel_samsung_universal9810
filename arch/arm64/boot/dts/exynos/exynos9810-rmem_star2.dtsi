@@ -26,6 +26,7 @@
 		id = <12>;
 	};
 	rkp_region: rkp_region@0xAF800000 {
+		status = "disabled";
 		compatible = "removed-dma-pool";
 		reg = <0x0 0xAF800000 0x2000000>;
 	};

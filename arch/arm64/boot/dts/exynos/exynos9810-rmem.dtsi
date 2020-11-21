@@ -44,6 +44,7 @@
 		};
 
 		tima_mem: tima_region@0xB8000000 {
+			status = "disabled";
 			compatible = "removed-dma-pool";
 			reg = <0x0 0xB8000000 0x200000>;
 		};
