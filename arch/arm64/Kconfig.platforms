@@ -286,6 +286,18 @@ config ARCH_EXYNOS9
 	help
 	  Samsung EXYNOS9 (Meercat/Ananke) SoC based systems
 
+config 9810_DTS_CROWN
+	bool "Crownlte DTS"
+	depends on SOC_EXYNOS9810
+
+config 9810_DTS_STAR2
+	bool "Star2lte DTS"
+	depends on SOC_EXYNOS9810
+
+config 9810_DTS_STAR
+	bool "Starlte DTS"
+	depends on SOC_EXYNOS9810
+
 config ZONE_MOVABLE
 	bool "Enable Zone Movable"
 	default n
