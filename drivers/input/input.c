@@ -2958,7 +2958,7 @@ static int __init input_init(void)
 		pr_err("unable to register char major %d", INPUT_MAJOR);
 		goto fail2;
 	}
-#if !defined(CONFIG_INPUT_BOOSTER) // Input Booster +
+#if !defined(CONFIG_INPUT_BOOSTER) && 0// Input Booster +
 	input_booster_init();
 #endif  // Input Booster -
 
